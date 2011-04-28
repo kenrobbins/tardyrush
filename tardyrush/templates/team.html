@@ -1,0 +1,99 @@
+{% macro display_users(users) %}
+    {%- for p in users %}
+
+    {% endfor %}
+{% endmacro %}
+
+{% extends "layout.html" %}
+
+{% block body %}
+
+    <h2>{{ team.name }}
+    {% if team.id|can_edit_team %}
+        <a class="header_link"
+        href="{{ url_for('show_team', action='edit', team_id=team.id)
+        }}"><img src="/static/pencil.png"></a>
+    {% endif %}
+    </h2>
+
+    {% if join_form.errors or leave_form.errors %}
+        <p>Uh oh! Please fix the errors below and try again.</p>
+    {% endif %}
+
+
+    <table>
+        <tr>
+            <th>Tag</th>
+            <th>Web Site</th>
+            <th>Join Date</th>
+            {% if wins or losses or draws %}<th>Record</th>{% endif %}
+        </tr>
+        <tr>
+            <td>{{ team.tag }}</td>
+            <td><a href="{{ team.url }}">{{ team.url }}</a></td>
+            <td>{{ team.date_created.strftime('%B %d, %Y') }}</td>
+            {% if wins or losses or draws %}<td>{{wins}} - {{losses}}
+            {%- if draws %} - {{draws}}{%-endif-%}
+            </td>{% endif %}
+        </tr>
+    </table>
+
+    <h2>Players</h2>
+
+    <table id="team_player_table">
+    <tr>
+        <th>Player</th>
+        <th>Status</th>
+        <th>Join Date</th>
+    </tr>
+    {%- for p in players %}
+        <tr>
+            <td>{{ p.user.name }}</td>
+            <td>{{ p.status|pretty_team_player_status }}</td>
+            <td>{{ p.date_joined.strftime('%B %d, %Y') }}</td>
+        </tr>
+    {%- endfor %}
+    </table>
+
+    {% if g.user and join_form %}
+        <div id="join_form">
+        <h2>Join Team</h2>
+        <form action="{{url_for('show_team', team_id=team.id, action='join')}}" method="post">
+            {{ join_form.hidden_tag() }}
+            {% for field in join_form if field.type != 'HiddenField' -%}
+                <p>
+                {{ field.label }}<br/>
+                {% if field.errors %}
+                <ul class="errors">
+                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                </ul>
+                {% endif -%}
+                {{ field }}
+                </p>
+            {% endfor %}
+            <p><input type="submit" name="submit" value="Join Team"/></p>
+        </form>
+        </div>
+    {%- elif g.user and leave_form %}
+        <div id="leave_form">
+        <h2>Leave Team</h2>
+        <form action="{{url_for('show_team', team_id=team.id, action='leave')}}" method="post">
+            {{ leave_form.hidden_tag() }}
+            {% for field in leave_form if field.type != 'HiddenField' -%}
+                <p>
+                {{ field.label }}<br/>
+                {% if field.errors %}
+                <ul class="errors">
+                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                </ul>
+                {% endif -%}
+                {{ field }}
+                </p>
+            {% endfor %}
+            <p><input type="submit" name="submit" value="Leave Team"/></p>
+        </form>
+        </div>
+    {% endif %}
+
+{% endblock %}
+

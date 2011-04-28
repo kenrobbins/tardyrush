@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% import 'forms.html' as forms %}
+{% block body %}
+    {% if adding %}
+        {{ forms.server(form, team.id) }}
+    {% else %}
+        {{ forms.server(form, team.id, server_id) }}
+    {% endif %}
+
+    {% if server_id %}
+    <h2>Delete Server</h2>
+    <form method="post" action="{{url_for('server',team_id=team.id,
+    server_id=server_id, action='delete')}}">
+    <p>
+        Are you sure?  This will remove matches scheduled with this
+        server.
+    </p>
+    <p>
+        <input type="submit" name="submit" value="Delete Server"/>
+    </p>
+    </form>
+    {% endif %}
+{% endblock %}
+

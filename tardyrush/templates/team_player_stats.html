@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+{% block head %}
+<link href="/static/datatables/datatables.min.css" media="screen" rel="stylesheet" type="text/css" />
+<script src="/static/datatables/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    var tables = $('.team_player_stats');
+    for (var i = 0; i < tables.length; ++i) {
+        $(tables[i]).dataTable({
+            "bFilter": false,
+            "bPaginate": false,
+            "bInfo": false,
+            "bSortClasses" : false,
+            "bAutoWidth" : false,
+            "aaSorting" : [ [6,'desc'], [0, 'asc'] ]
+        });
+    }
+});
+</script>
+{% endblock %}
+
+{% macro stats_header(stats, phash) %}
+    <table class="team_player_stats">
+    <thead>
+    <tr>
+    <th>Player</th>
+    <th>Matches<br/>Played</th>
+    <th>Match<br/>Record</th>
+    <th>Matches<br/>KDR &gt;= 1</th>
+    <th>Kills</th>
+    <th>Deaths</th>
+    <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
+    <th>Offensive<br/>Objectives</th>
+    <th>Defensive<br/>Objectives</th>
+    </tr>
+    </thead>
+  
+    <tbody>
+    {% for s in stats %}
+        {% if s.user_id in phash %}
+            <tr>
+            <td>{{ phash[s.user_id] }}</td>
+            <td>{{ s.wins + s.losses }}</td>
+            <td>{{ s.wins }}-{{ s.losses }}</td>
+            <td>{{ s.pos_kdr }}</td>
+            <td>{{ s.kills }}</td>
+            <td>{{ s.deaths }}</td>
+            <td>{{ "%.2f"|kdr(s.kills, s.deaths)|safe }}</td>
+            <td>{{ s.offobjs }}</td>
+            <td>{{ s.defobjs }}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+    </tbody>
+
+    </table>
+{% endmacro %}
+
+{% block body %}
+
+    <h2>Stats</h2>
+
+    <h3>Total Stats
+        (Team Record:
+        {{ total_wins }}-{{ total_losses }}
+        {%- if total_draws -%}
+        -{{ total_draws }}
+        {%- endif -%})
+    </h3>
+
+    {{ stats_header(total_stats, phash) }}
+
+
+    {% for group in stats|groupby('gametype_id') %}
+        <h3>{{ gthash[group.grouper] }}
+        {% if group.grouper in wins -%}
+            (Team Record:
+            {{ wins[group.grouper] }}-{{ losses[group.grouper] }}
+            {%- if draws[group.grouper] -%}
+            -{{ draws[group.grouper] }}
+            {%- endif -%})
+        {%- endif -%}
+        </h3>
+
+        {{ stats_header(group.list, phash) }}
+      
+        </table>
+    {% endfor %}
+
+{% endblock %}
+
