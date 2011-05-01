@@ -1258,8 +1258,8 @@ def add_match():
             flash(u'The match was successfully added.')
             return redirect(url_for('my_matches'))
 
-    oform = OpponentForm(csrf_enabled=False)
-    sform = ServerForm(csrf_enabled=False)
+    oform = OpponentForm()
+    sform = ServerForm()
 
     return rt('new.html', 
             page={'top':'my_matches', 'sub':'add_match'},
@@ -1340,8 +1340,8 @@ def show_match(match_id, action):
 
             return redirect(url_for('my_matches'))
 
-        oform = OpponentForm(csrf_enabled=False)
-        sform = ServerForm(csrf_enabled=False)
+        oform = OpponentForm()
+        sform = ServerForm()
 
         return rt('new.html', form=form, players=players, 
                 page={'top':'my_matches', 'sub':up_prev},
@@ -1404,6 +1404,7 @@ def show_match(match_id, action):
                 if request.values.get('api') == '1':
                     psp = pretty_match_player_status(player_status)
                     return jsonify(success=True,
+                            csrf=form.csrf.data,
                             match_id=match.id,
                             user_id=g.user.id,
                             user_name=g.user.name,
@@ -1436,7 +1437,7 @@ def add_server(team_id=0):
 
     api = request.values.get('api') == '1'
 
-    form = ServerForm(csrf_enabled=not api)
+    form = ServerForm()
     form.name.validators[0].values = [ s.name for s in servers ]
     if form.validate_on_submit():
         server = Server(team_id=team_id,
@@ -1448,6 +1449,7 @@ def add_server(team_id=0):
 
         if api:
             return jsonify(success=True, server_id=server.id,
+                    csrf=form.csrf.data,
                     server_name=server.name)
 
         if form.f.data == 'add_match':
@@ -1526,7 +1528,7 @@ def add_opponent(team_id=0):
 
     api = request.values.get('api') == '1'
 
-    form = OpponentForm(csrf_enabled=not api)
+    form = OpponentForm()
     form.name.validators[0].values = [ o.name for o in opponents ]
     if form.validate_on_submit():
         opponent = Opponent(team_id=team_id,
@@ -1538,6 +1540,7 @@ def add_opponent(team_id=0):
 
         if api:
             return jsonify(success=True, opponent_id=opponent.id,
+                    csrf=form.csrf.data,
                     opponent_name=opponent.name)
 
         if form.f.data == 'add_match':

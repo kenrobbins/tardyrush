@@ -1,3 +1,9 @@
+function update_csrf(data) {
+    if (data.csrf) {
+        $('input[name=csrf]').val(data.csrf);
+    }
+}
+
 function update_player_status(obj) {
     var form = $(obj).parent();
     var csrf = form.find('input[name=csrf]').val();
@@ -8,6 +14,7 @@ function update_player_status(obj) {
             s: s,
             api: '1'
         }, function(data) {
+            update_csrf(data);
             if (data.success) {
                 var lower_status = data.player_status_pretty.toLowerCase();
                 var id = 'status_' + data.match_id + '_' + data.user_id;
@@ -89,6 +96,7 @@ function save_form(type) {
     var url = form.attr('action');
 
     $.post(url, data, function(data) {
+            update_csrf(data);
             form.find('.errors').remove();
             if (data.success) {
                 var newval = $("<option></option>").
