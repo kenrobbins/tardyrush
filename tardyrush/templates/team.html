@@ -11,7 +11,7 @@
     <h2>{{ team.name }}
     {% if team.id|can_edit_team %}
         <a class="header_link"
-        href="{{ url_for('show_team', action='edit', team_id=team.id)
+        href="{{ url_for('show', action='edit', team_id=team.id)
         }}"><img src="/static/pencil.png"></a>
     {% endif %}
     </h2>
@@ -58,7 +58,7 @@
     {% if g.user and join_form %}
         <div id="join_form">
         <h2>Join Team</h2>
-        <form action="{{url_for('show_team', team_id=team.id, action='join')}}" method="post">
+        <form action="{{url_for('show', team_id=team.id, action='join')}}" method="post">
             {{ join_form.hidden_tag() }}
             {% for field in join_form if field.type != 'HiddenField' -%}
                 <p>
@@ -77,7 +77,7 @@
     {%- elif g.user and leave_form %}
         <div id="leave_form">
         <h2>Leave Team</h2>
-        <form action="{{url_for('show_team', team_id=team.id, action='leave')}}" method="post">
+        <form action="{{url_for('show', team_id=team.id, action='leave')}}" method="post">
             {{ leave_form.hidden_tag() }}
             {% for field in leave_form if field.type != 'HiddenField' -%}
                 <p>

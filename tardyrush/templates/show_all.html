@@ -33,17 +33,20 @@ $(document).ready(function() {
         {%- endif -%}
         {%- if cur_status != "unavailable" -%}
         {%- endif -%}
-        <form id="sb_available_{{m.id}}" method="post" action="{{ url_for('show_match', match_id=m.id, action='status') }}">
+        <form id="sb_available_{{m.id}}" method="post" action="{{
+        url_for('matches.show', match_id=m.id, action='status') }}">
         {{ aform.hidden_tag('csrf') }}
         {{ aform.s(value="available") }}
         <input onClick="return update_player_status(this)" type="submit" name="submit" value="Available" />
         </form>
-        <form id="sb_maybe_{{m.id}}" method="post" action="{{ url_for('show_match', match_id=m.id, action='status') }}">
+        <form id="sb_maybe_{{m.id}}" method="post" action="{{
+        url_for('matches.show', match_id=m.id, action='status') }}">
         {{ aform.hidden_tag('csrf') }}
         {{ aform.s(value="maybe") }}
         <input onClick="return update_player_status(this)" type="submit" name="submit" value="Maybe" />
         </form>
-        <form id="sb_unavailable_{{m.id}}" method="post" action="{{ url_for('show_match', match_id=m.id, action='status') }}">
+        <form id="sb_unavailable_{{m.id}}" method="post" action="{{
+        url_for('matches.show', match_id=m.id, action='status') }}">
         {{ aform.hidden_tag('csrf') }}
         {{ aform.s(value="unavailable") }}
         <input onClick="return update_player_status(this)" type="submit" name="submit" value="Unavailable" />
@@ -66,12 +69,13 @@ $(document).ready(function() {
         src="{{url_for('static', filename='googlecalendar.png')}}" /></a>
 
         {%- if m.team.id|can_edit_match -%}
-        <a title="Edit this match" class="edit_match" href="{{ url_for('show_match', action='edit',
+        <a title="Edit this match" class="edit_match" href="{{
+        url_for('matches.show', action='edit',
         match_id=m.id)}}"><img src="/static/pencil.png" /></a>
         {%- endif -%}
     </div>
         <h3 class="opponent">
-        <a href="{{ url_for('show_match', match_id=m.id) }}">{{ m.team.tag }} vs {{m.opponent.tag }}</a>
+        <a href="{{ url_for('matches.show', match_id=m.id) }}">{{ m.team.tag }} vs {{m.opponent.tag }}</a>
         </h3>
 
         <h4 class="date">{{ m.date|matches_datetime_format }}</h4>
@@ -162,9 +166,9 @@ $(document).ready(function() {
 
   <p>No matches here!
   {% if g.is_admin %}
-  Why don't you <a href="{{url_for('add_match')}}">add some</a>?
+  Why don't you <a href="{{url_for('matches.add')}}">add some</a>?
   {% elif g.teams|length == 0 %}
-  <a href="{{url_for('teams')}}">Join a team</a> to start seeing matches.
+  <a href="{{url_for('teams.all')}}">Join a team</a> to start seeing matches.
   {% else %}
   Ask your team leaders to add some.
   {%- endif %}

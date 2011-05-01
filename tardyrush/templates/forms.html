@@ -3,9 +3,9 @@
   <h2>{%- if adding %}Add{%-else%}Edit{%-endif%} Opponent</h2>
   <form 
   {% if adding %}
-    action="{{url_for('add_opponent',team_id=team_id)}}" 
+    action="{{url_for('team_admin.add_opponent',team_id=team_id)}}" 
   {% else %}
-    action="{{url_for('opponent',team_id=team_id,opponent_id=opponent_id,action='edit')}}" 
+    action="{{url_for('team_admin.opponent',team_id=team_id,opponent_id=opponent_id,action='edit')}}" 
   {% endif %}
   method="post" id="opponent_form">
     {{ form.hidden_tag() }}
@@ -45,9 +45,9 @@
   <h2>{%- if adding %}Add{%-else%}Edit{%-endif%} Server</h2>
   <form
   {% if adding %}
-    action="{{url_for('add_server',team_id=team_id)}}"
+    action="{{url_for('team_admin.add_server',team_id=team_id)}}"
   {% else %}
-    action="{{url_for('server',team_id=team_id,server_id=server_id,action='edit')}}"
+    action="{{url_for('team_admin.server',team_id=team_id,server_id=server_id,action='edit')}}"
   {% endif %}
   method="post"
   id="server_form">

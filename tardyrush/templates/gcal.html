@@ -27,7 +27,7 @@ m.password|trim|length -%}(Password: {{m.password|safe}})
 
 {%- macro link(m) -%}
 {{ "http://www.google.com/calendar/event"|urlencode(action="TEMPLATE",
-trp="true", sprop=[ "name:tardyrush", url_for('show_match', match_id=m.id,
+trp="true", sprop=[ "name:tardyrush", url_for('matches.show', match_id=m.id,
 _external=True) ], text=text(m), details=details(m),
 location=loc(m), dates=dates(m)) }}
 {%- endmacro -%}

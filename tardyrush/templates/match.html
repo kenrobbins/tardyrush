@@ -12,7 +12,7 @@ _external=True)}}' );
     <h2>{{match.team.name}} vs. {{match.opponent.name}}
     {% if match.team.id|can_edit_match -%}
     <a class="header_link" title="Edit this match"
-    href="{{ url_for('show_match', action='edit',match_id=match.id,
+    href="{{ url_for('matches.show', action='edit',match_id=match.id,
     from='single')}}"
     ><img src="/static/pencil.png"/></a>
     {%- endif -%}
@@ -100,19 +100,19 @@ _external=True)}}' );
 
         {%- if when == 'upcoming' -%}
         <div class="status_buttons">
-        <form method="post" action="{{ url_for('show_match', match_id=match.id, action='status') }}">
+        <form method="post" action="{{ url_for('matches.show', match_id=match.id, action='status') }}">
         <input type="hidden" name="from" value="single" />
         {{ aform.hidden_tag('csrf') }}
         {{ aform.s(value="available") }}
         <input type="submit" name="submit" value="Available" />
         </form>
-        <form method="post" action="{{ url_for('show_match', match_id=match.id, action='status') }}">
+        <form method="post" action="{{ url_for('matches.show', match_id=match.id, action='status') }}">
         <input type="hidden" name="from" value="single" />
         {{ aform.hidden_tag('csrf') }}
         {{ aform.s(value="maybe") }}
         <input type="submit" name="submit" value="Maybe" />
         </form>
-        <form method="post" action="{{ url_for('show_match', match_id=match.id, action='status') }}">
+        <form method="post" action="{{ url_for('matches.show', match_id=match.id, action='status') }}">
         <input type="hidden" name="from" value="single" />
         {{ aform.hidden_tag('csrf') }}
         {{ aform.s(value="unavailable") }}

@@ -13,7 +13,7 @@
     <p>Or by signing in through another OpenID provider.</p>
     {%- endif -%}
 
-    <form action="{{url_for('signin')}}" method="post">
+    <form action="{{url_for('account.signin')}}" method="post">
       <input type="hidden" name="next" value="{{ n }}"/>
     {% if error %}
         <p class=error><strong>Error:</strong> {{ error }}</p>

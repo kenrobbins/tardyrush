@@ -13,7 +13,7 @@
             </tr>
     {% endif -%}
         <tr>
-            <td><a title="View this team's details" href="{{ url_for('show_team', team_id=t.id) }}">{{ t.name }}</a></td>
+            <td><a title="View this team's details" href="{{ url_for('teams.show', team_id=t.id) }}">{{ t.name }}</a></td>
             <td>{{ t.tag }}</td>
             {% if t.url %}
             <td><a rel="nofollow" title="Go to this team's web site" href="{{ t.url }}">{{ t.url }}</a></td>
@@ -29,7 +29,7 @@
 {%- else %}
 
   <p>No teams here!
-      Why don't you <a href="{{url_for('add_team')}}">create one</a>?
+      Why don't you <a href="{{url_for('teams.add')}}">create one</a>?
   </p>
 {%- endfor %}
 

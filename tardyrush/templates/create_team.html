@@ -80,7 +80,7 @@
 
   {% if team_id %}
   <h2>Delete Team</h2>
-  <form action="{{url_for('show_team',team_id=team_id,action='delete')}}" method="post">
+  <form action="{{url_for('teams.show',team_id=team_id,action='delete')}}" method="post">
     <input type="submit" name="delete" value="Delete Team"/>
   </form>
   {% endif %}

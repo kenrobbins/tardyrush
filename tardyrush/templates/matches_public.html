@@ -22,14 +22,14 @@
           <tr>
             <td>{{ m.date|matches_date_format }}</td>
             <td>{{ m.date|matches_time_format }}</td>
-            <td><a href="{{ url_for('show_match', match_id=m.id) }}">
+            <td><a href="{{ url_for('matches.show', match_id=m.id) }}">
             {{m.team.tag}} vs. {{m.opponent.tag }}</a></td>
             <td>{{ m.competition.abbr }}</td>
             {% if results %}
                 <td>
                 {% if m.results %}
                     {% set r = m.results[0] %}
-                    <a href="{{url_for('show_completed_match',
+                    <a href="{{url_for('results.show',
                     cmatch_id=r.id)}}">
                     {% set f = '' %}
                     {% if r.final_result_method|is_forfeit %}
@@ -52,7 +52,7 @@
                     </a>
                 {% else %}
                     {% if m.team_id|can_edit_team %}
-                        <a class="add_results" href="{{ url_for('add_results', match_id=m.id) }}">Add Results</a>
+                        <a class="add_results" href="{{ url_for('results.add', match_id=m.id) }}">Add Results</a>
                     {% endif %}
                 {% endif %}
                 </td>
@@ -77,12 +77,12 @@
   <p>No matches here!
   {% if g.user %}
       {% if g.is_admin %}
-      Why don't you <a href="{{url_for('add_match')}}">add some</a>?
+      Why don't you <a href="{{url_for('matches.add')}}">add some</a>?
       {% else %}
       Ask your team leaders to add some.
       {%- endif %}
   {% else %}
-      Why don't you <a href="{{url_for('add_team')}}">create a team</a> and start adding some?
+      Why don't you <a href="{{url_for('.add_team')}}">create a team</a> and start adding some?
   {%- endif %}
   </p>
 

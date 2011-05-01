@@ -24,7 +24,7 @@ $(document).ready(function(){
     <h2>{{cmatch.team.name}} vs. {{cmatch.opponent.name}}
     {% if cmatch.team.id|can_edit_match %}
     <a class="header_link" 
-    href="{{ url_for('add_results', action='edit',cmatch_id=cmatch.id,
+    href="{{ url_for('results.add', action='edit',cmatch_id=cmatch.id,
     from='single')}}"
     ><img src="/static/pencil.png"/></a>
     {%- endif -%}

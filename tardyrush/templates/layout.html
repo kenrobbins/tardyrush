@@ -30,25 +30,25 @@
         {%- if g.user -%}
             {%- if not g.teams|count -%}
                 <ul class="left_links">
-                    <li><a href="{{url_for('add_team')}}">Add Your Team</a>
+                    <li><a href="{{url_for('teams.add')}}">Add Your Team</a>
                     <span>or</span>
-                        <a href="{{url_for('teams')}}">Find Your Team</a>
+                        <a href="{{url_for('teams.all')}}">Find Your Team</a>
                     </li>
                 </ul>
             {%- endif -%}
         {%- else -%}
             <ul class="left_links">
-                <li><a href="{{url_for('add_team')}}">Join Now!</a></li>
+                <li><a href="{{url_for('teams.add')}}">Join Now!</a></li>
             </ul>
         {%- endif -%}
         <ul class="links">
         {% if g.user %}
-            <li>Signed in as <a href="{{url_for('settings')}}">{{g.user.name}}</a></li>
-            <li><a href="{{url_for('settings')}}">Settings</a></li>
-            <li class="last_item"><a href="{{url_for('signout')}}">Sign Out</a></li>
+            <li>Signed in as <a href="{{url_for('account.settings')}}">{{g.user.name}}</a></li>
+            <li><a href="{{url_for('account.settings')}}">Settings</a></li>
+            <li class="last_item"><a href="{{url_for('account.signout')}}">Sign Out</a></li>
         {% else %}
             <li class="last_item">
-              <form action="{{url_for('signin')}}" method="post">
+              <form action="{{url_for('account.signin')}}" method="post">
                   <input type="hidden" name="next" value="{{ request.url }}"/>
                   <input type="image" src="/static/sits_small.png"
                   name="submit_sits" value="Sign In Through Steam"
@@ -77,7 +77,7 @@
             <script type="text/javascript" src="http://www.google.com/cse/tools/onthefly?form=searchbox&lang="></script>
         </div>
         <ul>
-            <li><a href="{{url_for('contact')}}">Contact</a></li>
+            <li><a href="{{url_for('.contact')}}">Contact</a></li>
         </ul>
         <br class="clear"/>
         </div>
@@ -90,18 +90,18 @@
             {%- if g.user -%}
             <li class="first {% if page.top == 'my_matches' %}selected{% endif
             %}">
-                <a href="{{ url_for('my_matches') }}">My Matches</a>
+                <a href="{{ url_for('matches.my_matches') }}">My Matches</a>
             </li>
             <li class="{% if page.top == 'my_teams' %}selected{%endif%}">
-                <a href="{{ url_for('my_teams') }}">My Teams</a>
+                <a href="{{ url_for('teams.my_teams') }}">My Teams</a>
             </li>
             {%- endif -%}
             <li class="{% if not g.user %}first{%endif%} {% if page.top ==
             'matches' %}selected{%endif%}">
-                <a href="{{ url_for('matches') }}">Matches</a></li>
+                <a href="{{ url_for('matches.all') }}">Matches</a></li>
             <li class="last {% if page.top ==
             'teams' %}selected{% endif %}">
-                <a href="{{ url_for('teams') }}">Teams</a></li>
+                <a href="{{ url_for('teams.all') }}">Teams</a></li>
         </ul>
         <br class="clear"/>
         </div>
@@ -112,12 +112,14 @@
         <div id="tabmenu" class="grid_12 alpha omega">
             <div>
             <ul>
-                <li class="first {% if page.sub == 'upcoming' %}selected{%-endif %}"><a href="{{ url_for('my_matches') }}">Upcoming</a></li>
+                <li class="first {% if page.sub == 'upcoming'
+                %}selected{%-endif %}"><a href="{{ url_for('matches.my_matches') }}">Upcoming</a></li>
                 <li class="{% if page.sub == 'previous'
-                %}selected{%-endif %}"><a href="{{ url_for('my_previous_matches')
+                %}selected{%-endif %}"><a href="{{ url_for('matches.my_previous_matches')
                 }}">Previous</a></li>
                 {%- if g.is_admin -%}
-                <li {% if page.sub == 'add_match' %} class="selected" {%-endif %}><a href="{{url_for('add_match')}}">New</a></li>
+                <li {% if page.sub == 'add_match' %} class="selected" {%-endif
+                %}><a href="{{url_for('matches.add')}}">New</a></li>
                 {%- endif -%}
             </ul>
             <br class="clear"/>
@@ -129,9 +131,9 @@
             <ul>
                 <li class="{% if page.sub == 'all_teams' %}selected {%-endif%}
                 first">
-                    <a href="{{ url_for('teams') }}">All Teams</a></li>
+                    <a href="{{ url_for('teams.all') }}">All Teams</a></li>
                 <li {% if page.sub == 'add_team' %} class="selected" {%-endif %}>
-                    <a href="{{ url_for('add_team') }}">Create Team</a></li>
+                    <a href="{{ url_for('teams.add') }}">Create Team</a></li>
             </ul>
             <br class="clear"/>
             </div>
@@ -142,18 +144,18 @@
             <ul>
                 <li class="{% if page.sub == 'all_my' %}selected {%-endif%}
                 first">
-                    <a href="{{ url_for('show_team',team_id=team.id)
+                    <a href="{{ url_for('teams.show',team_id=team.id)
                     }}">{{team.name}}</a></li>
                 <li class="{% if page.sub == 'matches' %}selected {%-endif%}">
-                    <a href="{{ url_for('team_matches', team_id=team.id)
+                    <a href="{{ url_for('teams.matches', team_id=team.id)
                     }}">Matches</a></li>
                 <li class="{% if page.sub == 'player_stats' %}selected {%-endif%}">
-                    <a href="{{ url_for('team_player_stats', team_id=team.id)
+                    <a href="{{ url_for('teams.stats', team_id=team.id)
                     }}">Stats</a></li>
                 <li class="{% if page.sub == 'admin' %}selected {%-endif%}">
-                    <a href="{{ url_for('admin', team_id=team.id) }}">Admin</a></li>
+                    <a href="{{ url_for('team_admin.index', team_id=team.id) }}">Admin</a></li>
                 <li class="{% if page.sub == 'edit' %}selected {%-endif%}">
-                    <a href="{{ url_for('show_team', team_id=team.id,
+                    <a href="{{ url_for('teams.show', team_id=team.id,
                     action='edit') }}">Edit</a></li>
             </ul>
             <br class="clear"/>
@@ -165,13 +167,13 @@
             <ul>
                 <li class="{% if page.sub == 'main' %}selected {%-endif%}
                 first">
-                    <a href="{{ url_for('show_team',team_id=team.id)
+                    <a href="{{ url_for('teams.show',team_id=team.id)
                     }}">{{team.name}}</a></li>
                 <li class="{% if page.sub == 'matches' %}selected {%-endif%}">
-                    <a href="{{ url_for('team_matches', team_id=team.id)
+                    <a href="{{ url_for('teams.matches', team_id=team.id)
                     }}">Matches</a></li>
                 <li class="{% if page.sub == 'player_stats' %}selected {%-endif%}">
-                    <a href="{{ url_for('team_player_stats', team_id=team.id)
+                    <a href="{{ url_for('teams.stats', team_id=team.id)
                     }}">Stats</a></li>
             </ul>
             <br class="clear"/>
