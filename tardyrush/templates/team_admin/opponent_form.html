@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% import 'helpers/forms.html' as forms %}
+{% block body %}
+    {% if adding %}
+        {{ forms.opponent(form, team.id) }}
+    {% else %}
+        {{ forms.opponent(form, team.id, opponent_id) }}
+    {% endif %}
+
+    {% if opponent_id %}
+    <h2>Delete Opponent</h2>
+    <form method="post" action="{{url_for('opponent', team_id=team.id,
+    opponent_id=opponent_id, action='delete')}}">
+    <p>
+        Are you sure?  This will remove matches scheduled with this
+        opponent.
+    </p>
+    <p>
+        <input type="submit" name="submit" value="Delete Opponent"/>
+    </p>
+    </form>
+    {% endif %}
+{% endblock %}

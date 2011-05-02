@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block title %}Create Account{% endblock %}
+{% block body %}
+    {% if settings %}
+        <h2>Settings</h2>
+    {%- else -%}
+        <h2>Create Account</h2>
+        <p>
+            Welcome!  This is the first time you've signed in.  In
+            order to proceed, we need some information from you first.
+        </p>
+    {%- endif -%}
+
+    <form action="" method="post">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.type != 'HiddenField' -%}
+        {% if field.type != 'FieldList' -%}
+            <p>
+            {{ field.label }}
+            {% if field.name == 'steam_id' %}
+                <span class="label_extra">(e.g., STEAM_X:Y:Z)</span>
+            {%- endif -%}
+            <br/>
+            {% if field.errors -%}
+                <ul class="errors">
+                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                </ul>
+            {% endif -%}
+            {{ field }}
+            </p>
+        {% endif -%}
+    {% endfor -%}
+
+    <p>
+      <input type="submit" value="{%- if settings -%}Save Settings{%- else
+      -%}Create Account{%- endif -%}">
+    </p>
+    </form>
+
+    {% if not settings %}
+        <p>
+        If you don't want to proceed, you can <a href="{{ url_for('signout')
+        }}">sign out</a> instead.
+        </p>
+    {% endif -%}
+{% endblock %}

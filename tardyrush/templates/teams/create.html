@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% block title %}Create Team{% endblock %}
+{% block teamname %}
+    {{team.name}}
+{% endblock %}
+{% block body %}
+  <h2>{%- if adding %}Create Team{%else%}Edit Team{%endif%}</h2>
+
+    {% if form.errors %}
+        <p>Uh oh! Please fix the errors below and try again.</p>
+    {% endif %}
+
+  <form action="" method=post>
+    {{ form.hidden_tag() }}
+    {% for field in form if field.type != 'HiddenField' -%}
+        {% if field.type != 'FieldList' -%}
+            <p>
+            {{ field.label }}<br/>
+            {% if field.errors -%}
+                <ul class="errors">
+                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                </ul>
+            {% endif -%}
+            {{ field }}
+            </p>
+        {% endif -%}
+    {% endfor -%}
+
+    <p>
+      <input type="submit" name="submit"
+        value="{%- if adding %}Create Team{% else %}Save Team{% endif %}"/>
+    </p>
+  </form>
+
+    {% if not adding -%}
+    <form action="" method=post>
+    <input type="hidden" name="edit_players" value="1" />
+    {{ players_form.hidden_tag() }}
+    {% for field in players_form if field.type != 'HiddenField' -%}
+        {% if field.type == 'FieldList' %}
+            <h2>Edit Players</h2>
+            <table>
+            <tr>
+            <th>Player</th>
+            <th>Status</th>
+            <th>Delete?</th>
+            </tr>
+            {% for f in field %}
+                {% if f.type == 'FormField' %}
+                    <tr>
+                    <td>{{ players[f['user_id'].data] }}
+                    {{ f.user_id }}
+                    </td>
+                    <td>
+                    {% if f.status.disabled %}
+                        {{ f.status(disabled='disabled') }}
+                    {% else %}
+                        {{ f.status }}
+                    {% endif -%}</td>
+                    <td>
+                    {% if f['delete'].disabled %}
+                        {{ f.delete(disabled="disabled") }}
+                    {% else %}
+                        {{ f.delete }}
+                    {% endif -%}
+                    </td>
+                    </tr>
+                {% endif -%}
+            {% endfor %}
+            </table>
+        {% endif -%}
+    {% endfor -%}
+
+    <p>
+      <input type="submit" name="submit" class="btn"
+        value="Save Players"/>
+    </p>
+    </form>
+    {% endif -%}
+
+  {% if team_id %}
+  <h2>Delete Team</h2>
+  <form action="{{url_for('teams.show',team_id=team_id,action='delete')}}" method="post">
+    <input type="submit" name="delete" value="Delete Team"/>
+  </form>
+  {% endif %}
+{% endblock %}

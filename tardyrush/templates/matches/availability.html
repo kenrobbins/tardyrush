@@ -1,0 +1,178 @@
+{% extends "layout.html" %}
+{% import 'helpers/gcal.html' as gcal %}
+{% block head %}
+<script type="text/javascript" src="/static/main.min.js"></script>
+<script type="text/javascript" src="/static/zeroclipboard/ZeroClipboard.min.js"></script>
+<script type="text/javascript">
+ZeroClipboard.setMoviePath( '{{url_for('static', filename='zeroclipboard/ZeroClipboard.swf',
+_external=True)}}' );
+</script>
+<script type="text/javascript">
+$(document).ready(function() {
+    {%- for m in matches -%}
+        {%- for p in m.players -%}
+            {%- if p.user.id == g.user.id -%}
+                {%- set cur_status = p.status|pretty_match_player_status|lower-%}
+                $('#sb_{{cur_status}}_{{m.id}}').hide();
+            {%- endif -%}
+        {%- else -%}
+            $('#match_{{m.id}}').hide();
+        {%- endfor -%}
+    {%- endfor -%}
+});
+</script>
+{% endblock %}
+{% block body %}
+  <h2>Upcoming Matches</h2>
+
+    {% macro status_buttons(m, cur_status) %}
+        <div id="status_buttons_{{m.id}}" class="status_buttons">
+        {%- if cur_status != "available" -%}
+        {%- endif -%}
+        {%- if cur_status != "maybe" -%}
+        {%- endif -%}
+        {%- if cur_status != "unavailable" -%}
+        {%- endif -%}
+        <form id="sb_available_{{m.id}}" method="post" action="{{
+        url_for('matches.show', match_id=m.id, action='status') }}">
+        {{ aform.hidden_tag('csrf') }}
+        {{ aform.s(value="available") }}
+        <input onClick="return update_player_status(this)" type="submit" name="submit" value="Available" />
+        </form>
+        <form id="sb_maybe_{{m.id}}" method="post" action="{{
+        url_for('matches.show', match_id=m.id, action='status') }}">
+        {{ aform.hidden_tag('csrf') }}
+        {{ aform.s(value="maybe") }}
+        <input onClick="return update_player_status(this)" type="submit" name="submit" value="Maybe" />
+        </form>
+        <form id="sb_unavailable_{{m.id}}" method="post" action="{{
+        url_for('matches.show', match_id=m.id, action='status') }}">
+        {{ aform.hidden_tag('csrf') }}
+        {{ aform.s(value="unavailable") }}
+        <input onClick="return update_player_status(this)" type="submit" name="submit" value="Unavailable" />
+        </form>
+        </div>
+    {% endmacro %}
+
+
+  {%- for m in matches %}
+    {% if loop.index0 % 3 == 0 -%}
+        <div class="match_row_container">
+    {% endif %}
+    <div class="grid_4 middle_match alpha omega">
+    <div class="match_block">
+
+    <div class="icon_links">
+    <a href="{{gcal.link(m)}}"
+        title="Add this match to Google Calendar"
+        target="_blank"><img
+        src="{{url_for('static', filename='googlecalendar.png')}}" /></a>
+
+        {%- if m.team.id|can_edit_match -%}
+        <a title="Edit this match" class="edit_match" href="{{
+        url_for('matches.show', action='edit',
+        match_id=m.id)}}"><img src="/static/pencil.png" /></a>
+        {%- endif -%}
+    </div>
+        <h3 class="opponent">
+        <a href="{{ url_for('matches.show', match_id=m.id) }}">{{ m.team.tag }} vs {{m.opponent.tag }}</a>
+        </h3>
+
+        <h4 class="date">{{ m.date|matches_datetime_format }}</h4>
+
+        <div class="back"><h4>Opponent</h4>
+        <p>{{ m.opponent.name }}</p>
+        </div>
+
+        <div class="back">
+        <h4>Competition</h4>
+        <p>{{ m.competition.abbr }}</p>
+        </div>
+
+        {%- if m.server -%}
+            <div class="back">
+            {%- if m.competition.game.server_copy_format -%}
+            <div id="copy_server_info_cont_{{m.id}}" class="copy_server_info">
+                <div title="Copy server info to clipboard" id="copy_server_info_{{m.id}}">
+                &nbsp;
+                </div>
+            </div>
+            <script type="text/javascript">
+                var clip = new ZeroClipboard.Client();
+                var txt = "{{m.competition.game.server_copy_format|server_copy_text(m)}}";
+                clip.setText(txt);
+                clip.setHandCursor(true);
+                clip.glue( 'copy_server_info_{{m.id}}', 'copy_server_info_cont_{{m.id}}' );
+                document.getElementById(clip.movieId).title = "Copy server info to clipboard";
+            </script>
+            {%- endif -%}
+            <h4>Server</h4>
+            <p>
+            {{ m.server.name }}<br/>
+            {{ m.server.address }} 
+            {%- if m.password|trim|length %} <br/>
+            Password: <span
+            class="match_password">{{ m.password }}</span>{%- endif -%}
+            </p>
+            </div>
+        {%- endif -%}
+
+        {%- if m.comments|trim|length -%}
+        <div class="comments back">
+            <h4>Comments</h4>
+            {{m.comments|trim|nl2br|replace("<p>"|safe, "<p class='first'>"|safe, 1)}}
+        </div>
+        {%- endif -%}
+
+        {% set cur_status = "" %}
+        <table id="match_{{m.id}}" class="players">
+        <tr>
+        <th>Player</th><th>Status</th></tr>
+        {%- for p in m.players %}
+            {%- if p.user.id == g.user.id -%}
+                <tr class="current_user">
+                {% set cur_status = p.status|pretty_match_player_status|lower %}
+                {% set sb = status_buttons(m, cur_status) %}
+            {%- else %}
+                <tr>
+            {%- endif %}
+
+            <td>{{ p.user.name }}</td>
+            <td id="status_{{m.id}}_{{p.user.id}}" class="{{ p.status|pretty_match_player_status|lower }}">{{ p.status|pretty_match_player_status }}</td>
+            </tr>
+
+            {%- if loop.last -%}
+            {%- endif %}
+        {%- endfor %}
+        </table>
+        {% if sb %}
+            {{ sb }}
+        {% else %}
+            {{ status_buttons(m, "") }}
+        {% endif %}
+
+
+
+    </div>
+
+
+    </div>
+    {% if loop.index0 % 3 == 2 or loop.last -%}
+        <br class="clear"/>
+        </div>
+    {% endif %}
+  
+  {%- else %}
+
+  <p>No matches here!
+  {% if g.is_admin %}
+  Why don't you <a href="{{url_for('matches.add')}}">add some</a>?
+  {% elif g.teams|length == 0 %}
+  <a href="{{url_for('teams.all')}}">Join a team</a> to start seeing matches.
+  {% else %}
+  Ask your team leaders to add some.
+  {%- endif %}
+  </p>
+
+  {%- endfor %}
+{% endblock %}

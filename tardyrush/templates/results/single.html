@@ -1,0 +1,173 @@
+{% extends "layout.html" %}
+{% block head %}
+<link href="/static/datatables/datatables.min.css" media="screen" rel="stylesheet" type="text/css" />
+<script src="/static/datatables/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    var tables = $('.match_round_stats');
+    for (var i = 0; i < tables.length; ++i) {
+        $(tables[i]).dataTable({
+            "bFilter": false,
+            "bPaginate": false,
+            "bInfo": false,
+            "bSortClasses" : false,
+            "bAutoWidth" : false,
+            "aaSorting" : [ [3,'desc'], [0, 'asc'] ]
+        });
+    }
+});
+</script>
+{% endblock %}
+
+{% block body %}
+    <h2>{{cmatch.team.name}} vs. {{cmatch.opponent.name}}
+    {% if cmatch.team.id|can_edit_match %}
+    <a class="header_link" 
+    href="{{ url_for('results.add', action='edit',cmatch_id=cmatch.id,
+    from='single')}}"
+    ><img src="/static/pencil.png"/></a>
+    {%- endif -%}
+    </h2>
+
+    <h3>{{ cmatch.date_played|matches_datetime_format_full }}</h3>
+
+    <table id="single_match_details">
+    <tr>
+        <th>Posted By</th><td>{{ cmatch.user.name }}</td>
+    </tr>
+    <tr>
+        <th>Competition</th><td>{{ cmatch.competition.name }}</td>
+    </tr>
+    {%- if cmatch.server -%}
+        <tr><th>Server</th><td>{{ cmatch.server.name }}</td></tr>
+        {%- if cmatch.password|trim|length %}
+        <tr>
+            <th>Password</th><td>{{ cmatch.password }}</td>
+        </tr>
+        {%- endif -%}
+        <tr><th>Result</th>
+        <td>
+        {% set f = '' %}
+        {% if cmatch.final_result_method|is_forfeit %}
+            {% set f = 'Forfeit ' %}
+        {% endif %}
+        {% if cmatch.wins > cmatch.losses %}
+            <strong class="res_win">{{f}}Win</strong>
+        {% elif cmatch.wins < cmatch.losses %}
+            <strong class="res_loss">{{f}}Loss</strong>
+        {% else %}
+            <strong class="res_draw">Draw</strong>
+        {% endif %}
+        {% if not cmatch.final_result_method|is_forfeit %}
+            ({{ cmatch.wins }} - 
+            {{ cmatch.losses }}
+            {%- if cmatch.draws %}
+                - {{ cmatch.draws }}
+            {%- endif -%})
+        {%- endif -%}
+        </td></tr>
+    {%- endif -%}
+    </table>
+
+    <div class="grid_7 suffix_5 alpha omega">
+
+    {%- if cmatch.comments|trim|length -%}
+    <div id="single_match_comments">
+        <h4>Comments</h4>
+        {{cmatch.comments|trim|nl2br|replace("<p>"|safe, "<p class='first'>"|safe, 1)}}
+    </div>
+    {%- endif -%}
+    </div>
+
+    {% if players|count %}
+
+    <h2>Stats</h2>
+
+    <h3>Overall</h3>
+   
+    <table class="match_round_stats">
+    <thead>
+    <tr>
+    <th>Player</th>
+    <th>Kills</th>
+    <th>Deaths</th>
+    <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
+    <th>Offensive<br/>Objectives</th>
+    <th>Defensive<br/>Objectives</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for uid, u in players.iteritems() %}
+        <tr>
+        <td>{{ u }}</td>
+        <td>{{ kills[uid] }}</td>
+        <td>{{ deaths[uid] }}</td>
+        <td>{{ "%.2f"|kdr(kills[uid], deaths[uid])|safe }}</td>
+        <td>{{ off_objs[uid] }}</td>
+        <td>{{ def_objs[uid] }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+
+    {% set rnum = 1 %}
+    {% for r in cmatch.rounds %}
+        <h3>Round {{ rnum }}</h3>
+        <table class="round_result">
+        <tr>
+        <th>Result</th>
+        <th>Map</th>
+        <th>Side</th>
+        <th>Gametype</th>
+        </tr>
+        <tr>
+        <td>
+        {% if r.wins > r.losses %}
+            <strong class="res_win">Win</strong>
+        {% elif r.wins < r.losses %}
+            <strong class="res_loss">Loss</strong>
+        {% else %}
+            <strong class="res_draw">Draw</strong>
+        {% endif %}
+        ({{ r.wins }} - 
+        {{ r.losses }}
+        {%- if r.draws %}
+            - {{ r.draws }}
+        {%- endif -%})</td>
+        <td>{{ r.map.name }}</td>
+        <td>{{ r.side.name }}</td>
+        <td>{{r.gametype.name}}</td>
+        </table>
+
+        <table class="match_round_stats">
+        <thead>
+        <tr>
+        <th>Player</th>
+        <th>Kills</th>
+        <th>Deaths</th>
+        <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
+        <th>Offensive<br/>Objectives</th>
+        <th>Defensive<br/>Objectives</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for p in r.players %}
+            <tr>
+            <td>{{ p.user.name }}</td>
+            <td>{{ p.kills }}</td>
+            <td>{{ p.deaths }}</td>
+            <td>{{ "%.2f"|kdr(p.kills, p.deaths)|safe }}</td>
+            <td>{{ p.off_objs }}</td>
+            <td>{{ p.def_objs }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+        {% set rnum = rnum + 1 %}
+    {% endfor %}
+
+    {% endif %}
+
+{% endblock %}
+
