@@ -4,6 +4,8 @@ from flaskext.openid import OpenID
 from flaskext.mail import Mail
 from flaskext.babel import Babel
 
+from tardyrush.helpers.consts import *
+
 app = Flask(__name__)
 app.config.from_pyfile('tardyrush.cfg')
 
@@ -33,4 +35,28 @@ def init_db():
 
 def destroy_db():
     db.drop_all()
+
+
+ADMINS = ContactRecipients
+if True or not app.debug:
+    import logging
+    from logging.handlers import SMTPHandler
+    mail_handler = SMTPHandler('127.0.0.1',
+                               'tardyrush@tardyrush.com',
+                               ADMINS, 'tardyrush exception')
+    mail_handler.setLevel(logging.ERROR)
+    app.logger.addHandler(mail_handler)
+
+    from logging import Formatter
+    mail_handler.setFormatter(Formatter('''
+Message type:       %(levelname)s
+Location:           %(pathname)s:%(lineno)d
+Module:             %(module)s
+Function:           %(funcName)s
+Time:               %(asctime)s
+
+Message:
+
+%(message)s
+'''))
 
