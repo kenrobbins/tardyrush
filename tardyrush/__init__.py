@@ -38,7 +38,7 @@ def destroy_db():
 
 
 ADMINS = ContactRecipients
-if True or not app.debug:
+if not app.debug:
     import logging
     from logging.handlers import SMTPHandler
     mail_handler = SMTPHandler('127.0.0.1',
