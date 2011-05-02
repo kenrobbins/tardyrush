@@ -1,4 +1,5 @@
-from flaskext.wtf import Form, TextAreaField, Length, Optional, Required
+from flaskext.wtf import Form, TextAreaField, Length, Optional, Required, \
+        RecaptchaField
 
 from fields import StrippedTextField
 
@@ -8,4 +9,5 @@ class ContactForm(Form):
     subject = StrippedTextField(u'Subject', \
             validators=[Length(min=0,max=100), Required()])
     comments = TextAreaField(u'Comments', validators=[Required()])
+    recaptcha = RecaptchaField()
 

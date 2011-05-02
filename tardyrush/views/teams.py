@@ -19,7 +19,7 @@ teams = Module(__name__)
 @teams.route('/team/all/')
 @teams.route('/teams/all/')
 def all():
-    return rt('teams.html',
+    return rt('teams/table.html',
             page={'top':'teams', 'sub':'all_teams'},
             all_teams=True,
             teams=Team.query.order_by(Team.name.asc()).all())
@@ -33,21 +33,6 @@ def my_teams():
         return show()
 
     return redirect(url_for('all'))
-
-    #teams = Team.query.\
-    #        filter(Team.id.in_(g.teams.keys())).\
-    #        order_by(Team.name.asc()).all()
-
-    #if not len(teams):
-    #    flash(u"""You are not on a team. 
-    #              Join a team by clicking Join next to the team's name.
-    #              Or create a team if you're a team leader.
-    #              """)
-    #    return redirect(url_for('teams'))
-
-    #return rt('teams.html',
-    #        page={'top': 'teams', 'sub': 'my_teams'},
-    #        teams=teams)
 
 @teams.route('/team/<action>/', defaults={'team_id':-1}, methods=('GET','POST'))
 @teams.route('/team/<int:team_id>/', defaults={'action':''})
@@ -69,7 +54,7 @@ def show(team_id=-1, action=''):
                         order_by(TeamPlayer.status.asc()).\
                         all()
                 teams = [ t.team for t in team_players ]
-                return rt('teams.html', 
+                return rt('teams/table.html', 
                         page={'top':'my_teams', 'sub':'all_my'},
                         teams=teams)
             return redirect(url_for('all'))
@@ -194,7 +179,7 @@ def show(team_id=-1, action=''):
                     return redirect(url_for('show', 
                         team_id=team.id, action='edit'))
 
-                return rt('create_team.html', team_id=team.id,
+                return rt('teams/create.html', team_id=team.id,
                         page={'top':'my_teams', 'sub':'edit'},
                         team=team,
                         players=players, form=form, players_form=players_form)
@@ -275,7 +260,7 @@ def show(team_id=-1, action=''):
                         return redirect(url_for('show', 
                             team_id=team.id, action='edit'))
 
-                return rt('create_team.html',
+                return rt('teams/create.html',
                         page={'top':'my_teams', 'sub':'edit'},
                         team_id=team.id, team=team,
                         players=players, form=form, players_form=players_form)
@@ -319,7 +304,7 @@ def show(team_id=-1, action=''):
                 order_by(TeamPlayer.status.asc()).\
                 order_by(User.name.asc())
 
-        return rt('team.html', 
+        return rt('teams/single.html', 
                 page=page,
                 wins=wins, losses=losses, draws=draws,
                 team=team,
@@ -360,7 +345,7 @@ def add():
         flash(u'The team was successfully created.')
         return redirect(url_for('matches.my_matches'))
 
-    return rt('create_team.html', 
+    return rt('teams/create.html', 
             page={'top': 'teams', 'sub': 'add_team'},
             adding=True,
             form=form)
@@ -622,7 +607,7 @@ def stats(team_id=0):
     for p in team.players:
         phash[p.user_id] = p.user.name
 
-    return rt('team_player_stats.html', 
+    return rt('teams/stats.html', 
             page=page,
             stats=stats,
             stats_pm=stats_pm,

@@ -43,7 +43,7 @@ def signin(t):
     if n.endswith('signin') or n.endswith('signin/'):
         n = n.replace('signin', '')
 
-    return rt('login.html', n=n, next=oid.get_next_url(), create=app.debug,
+    return rt('account/login.html', n=n, next=oid.get_next_url(), create=app.debug,
             error=oid.fetch_error())
 
 @account.route('/force_login/<username>')
@@ -89,7 +89,7 @@ def create_profile():
 
     form.next.data = oid.get_next_url()
 
-    return rt('create_profile.html', form=form)
+    return rt('account/create.html', form=form)
 
 @account.route('/settings/', methods=('GET','POST'))
 @require_login()
@@ -123,7 +123,7 @@ def settings():
         flash(u'Settings successfully updated.')
         return redirect(url_for('settings'))
 
-    return rt('create_profile.html', settings=True, form=form)
+    return rt('account/create.html', settings=True, form=form)
 
 @account.route('/logout')
 @account.route('/signout')

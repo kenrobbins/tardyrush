@@ -264,7 +264,7 @@ def add(cmatch_id, action):
                 flash(u'The results were successfully saved.')
                 return redirect(url_for('matches.my_previous_matches'))
 
-    return rt('completed_matches/new.html', 
+    return rt('results/form.html', 
             page={'top':'my_matches', 'sub':'previous'},
             adding=adding,
             player_choices=player_choices,
@@ -298,7 +298,7 @@ def show(cmatch_id):
             off_objs[p.user_id] += p.off_objs
             def_objs[p.user_id] += p.def_objs
 
-    return rt('completed_matches/match.html', 
+    return rt('results/single.html', 
             page=page,
             players=players,
             kills=kills,

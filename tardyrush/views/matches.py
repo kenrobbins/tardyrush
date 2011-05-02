@@ -165,7 +165,7 @@ def add():
     oform = OpponentForm()
     sform = ServerForm()
 
-    return rt('new.html', 
+    return rt('matches/form.html', 
             page={'top':'my_matches', 'sub':'add_match'},
             adding=True,
             team_id=g.team_leader_teams[0],
@@ -247,7 +247,7 @@ def show(match_id, action):
         oform = OpponentForm()
         sform = ServerForm()
 
-        return rt('new.html', form=form, players=players, 
+        return rt('matches/form.html', form=form, players=players, 
                 page={'top':'my_matches', 'sub':up_prev},
                 when=up_prev,
                 adding=False,
@@ -318,7 +318,7 @@ def show(match_id, action):
                 if request.values.get('from') == 'single':
                     return redirect(url_for('show', match_id=match_id))
     else:
-        return rt('match.html', 
+        return rt('matches/single.html', 
                 page={'top':'my_matches','sub':up_prev},
                 when=up_prev,
                 aform = MatchPlayerStatusForm(),
@@ -346,7 +346,7 @@ def my_matches():
             order_by(Match.id.asc()).\
             all()
 
-    return rt('show_all.html',
+    return rt('matches/availability.html',
         page={'top':'my_matches', 'sub':'upcoming'},
         aform = MatchPlayerStatusForm(),
         matches=matches)
@@ -366,7 +366,7 @@ def my_previous_matches():
             order_by(Match.id.asc()).\
             all()
 
-    return rt('matches_public.html',
+    return rt('matches/table.html',
         page={'top':'my_matches', 'sub':'previous'},
         previous_only=True,
         previous=matches)
@@ -410,7 +410,7 @@ def all(team_id=0): # show all matches
         else:
             previous.append(m)
 
-    return rt('matches_public.html',
+    return rt('matches/table.html',
         page=page, team=team,
         upcoming=upcoming, previous=previous)
 

@@ -49,7 +49,7 @@ def add_server(team_id=0):
 
     form.f.data = request.values.get('f') or ''
 
-    return rt('server_form.html',
+    return rt('team_admin/server_form.html',
             page={'top':'my_teams', 'sub':'admin'},
             team={'id':team_id,'name':g.teams[team_id]},
             adding=True, form=form)
@@ -82,7 +82,7 @@ def server(team_id, server_id, action):
             db.session.commit()
             flash(u'The server was successfully updated.')
         else:
-            return rt('server_form.html',
+            return rt('team_admin/server_form.html',
                     team={'id':team_id, 'name':g.teams[team_id]},
                     page={'top':'my_teams', 'sub':'admin'},
                     server_id=server_id,
@@ -135,7 +135,7 @@ def add_opponent(team_id=0):
 
     form.f.data = request.values.get('f') or ''
 
-    return rt('opponent_form.html',
+    return rt('team_admin/opponent_form.html',
             team={'id' : team_id, 'name':g.teams[team_id]},
             page={'top':'my_teams', 'sub':'admin'},
             adding=True, form=form)
@@ -170,7 +170,7 @@ def opponent(team_id, opponent_id, action):
             db.session.commit()
             flash(u'The opponent was successfully updated.')
         else:
-            return rt('opponent_form.html',
+            return rt('team_admin/opponent_form.html',
                     page={'top':'my_teams', 'sub':'admin'},
                     team={'id' : team_id, 'name':g.teams[team_id]},
                     opponent_id=opponent_id,
@@ -206,7 +206,7 @@ def index(team_id=0):
             order_by(ForumBot.id.desc()).\
             all()
 
-    return rt('team_admin.html',
+    return rt('team_admin/index.html',
             page={'top':'my_teams','sub':'admin'},
             team={'id' : team_id, 'name':g.teams[team_id]},
             opponents=opponents,
@@ -242,7 +242,7 @@ def add_forum_bot(team_id=0):
         flash(u'The forum helper was successfully added.')
         return redirect(url_for('index',team_id=team_id))
 
-    return rt('forum_bot_form.html',
+    return rt('team_admin/forum_bot_form.html',
             team={'id' : team_id, 'name':g.teams[team_id]},
             page={'top':'my_teams', 'sub':'admin'},
             adding=True, form=form)
@@ -276,7 +276,7 @@ def forum_bot(team_id,forum_bot_id, action):
             db.session.commit()
             flash(u'The forum helper was successfully updated.')
         else:
-            return rt('forum_bot_form.html',
+            return rt('team_admin/forum_bot_form.html',
                     page={'top':'my_teams', 'sub':'admin'},
                     team={'id' : team_id, 'name':g.teams[team_id]},
                     forum_bot_id=forum_bot_id,

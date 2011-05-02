@@ -47,7 +47,7 @@ def require_login(url='signin', page=None):
         def wrapper(*args, **kwargs):
             if g.user is None:
                 flash(u'Please sign in to view this page.')
-                return rt('login.html', next=oid.get_next_url(),
+                return rt('account/login.html', next=oid.get_next_url(),
                         page=page, create=app.debug,
                         error=oid.fetch_error())
             return target(*args, **kwargs)

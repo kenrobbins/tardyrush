@@ -12,11 +12,7 @@ oid = OpenID(app)
 babel = Babel(app)
 mail = Mail(app)
 
-def init_db():
-    db.create_all()
-
-def destroy_db():
-    db.drop_all()
+# modules
 
 from tardyrush.views.teams import teams
 from tardyrush.views.matches import matches
@@ -30,9 +26,11 @@ app.register_module(team_admin)
 app.register_module(account)
 app.register_module(results)
 
-# app filters
-# helpers
+# db helpers
 
-import tardyrush.models
-import tardyrush.views
+def init_db():
+    db.create_all()
+
+def destroy_db():
+    db.drop_all()
 
