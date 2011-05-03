@@ -17,7 +17,7 @@ from tardyrush.helpers.filters import *
 from tardyrush.views import require_login
 
 from tardyrush.models import \
-        TeamPlayer, MatchPlayerStatusForm, Competition, \
+        Team, TeamPlayer, MatchPlayerStatusForm, Competition, \
         Opponent, OpponentForm, ServerForm, \
         MatchPlayer, Match, Server, MatchForm, \
         User, ForumBotQueuedPost
