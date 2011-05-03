@@ -1,3 +1,7 @@
+import logging
+
+from logging import Formatter
+
 from flask import Flask
 from flaskext.sqlalchemy import SQLAlchemy
 from flaskext.openid import OpenID
@@ -39,7 +43,6 @@ def destroy_db():
 
 ADMINS = ContactRecipients
 if not app.debug:
-    import logging
     from logging.handlers import SMTPHandler
     mail_handler = SMTPHandler('127.0.0.1',
                                'tardyrush@tardyrush.com',
@@ -47,7 +50,6 @@ if not app.debug:
     mail_handler.setLevel(logging.ERROR)
     app.logger.addHandler(mail_handler)
 
-    from logging import Formatter
     mail_handler.setFormatter(Formatter('''
 Message type:       %(levelname)s
 Location:           %(pathname)s:%(lineno)d
@@ -59,4 +61,14 @@ Message:
 
 %(message)s
 '''))
+
+from logging.handlers import RotatingFileHandler
+file_handler = RotatingFileHandler('/tmp/tardyrush.app.log')
+file_handler.setLevel(logging.INFO)
+app.logger.addHandler(file_handler)
+
+file_handler.setFormatter(Formatter(
+    '%(asctime)s %(levelname)s: %(message)s '
+    '[in %(pathname)s:%(lineno)d]'
+))
 

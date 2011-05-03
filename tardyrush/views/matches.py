@@ -8,11 +8,12 @@ from flask import Module, g, request, flash, url_for
 from flaskext.mail import Message
 from flaskext.babel import to_user_timezone, to_utc
 
-from tardyrush import db
+from tardyrush import db, mail
 
 from tardyrush.helpers import rt, jsonify, abs_url_for, redirect
-from tardyrush.helpers.filters import *
 from tardyrush.helpers.teams import *
+from tardyrush.helpers.consts import *
+from tardyrush.helpers.filters import *
 from tardyrush.views import require_login
 
 from tardyrush.models import \
@@ -142,13 +143,18 @@ def add():
             try:
                 with mail.connect() as conn:
                     for p in players:
-                        msg = Message(recipients=[p.email],
-                                      body=message,
-                                      subject=subject,
-                                      sender=Sender)
-                        conn.send(msg)
+                        try:
+                            msg = Message(recipients=[p.email],
+                                          body=message,
+                                          subject=subject,
+                                          sender=Sender)
+                            conn.send(msg)
+                            app.logger.info("Sent mail to: %s" % p.email)
+                        except Exception, e:
+                            app.logger.error("Error sending mail: %s, %s" % \
+                                    (p.email, e))
             except Exception, e:
-                pass
+                app.logger.error("Error sending mail: %s" % e)
 
             # now notify players of new match via forum post
             forum_post = ForumBotQueuedPost(team_id=match.team_id,
