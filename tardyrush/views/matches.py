@@ -1,7 +1,7 @@
 import datetime
 import collections
 
-from sqlalchemy.orm import eagerload, join
+from sqlalchemy.orm import eagerload, join, outerjoin
 from sqlalchemy.orm.exc import NoResultFound
 
 from flask import Module, g, request, flash, url_for
@@ -346,6 +346,8 @@ def my_matches():
 
     cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
     matches = Match.query.\
+            outerjoin(CompletedMatch).\
+            filter(CompletedMatch.id == None).\
             filter(Match.team_id.in_(g.teams.keys())).\
             filter(Match.date > cutoff).\
             options(eagerload('competition'), \
