@@ -83,8 +83,10 @@ $(document).ready(function() {
         match_id=m.id)}}"><img src="/static/pencil.png" /></a>
         {%- endif -%}
 
-        <a class="recs" id="recs_{{m.id}}" href="#" onClick="return false;"><img
-        src="/static/chart_bar.png"/></a>
+        {%- if records[m.id] -%}
+            <a class="recs" id="recs_{{m.id}}" href="#" onClick="return false;"><img
+            src="/static/chart_bar.png"/></a>
+        {%- endif -%}
     </div>
         <h3 class="opponent">
         <a href="{{ url_for('matches.show', match_id=m.id) }}">{{ m.team.tag }} vs {{m.opponent.tag }}</a>
@@ -101,7 +103,7 @@ $(document).ready(function() {
         <p>{{ m.competition.abbr }}</p>
         </div>
 
-        {% if records[m.id] %}
+        {%- if records[m.id] -%}
             <div class="recs_table" id="recs_table_{{m.id}}">
             <table>
             <tr>
@@ -122,7 +124,7 @@ $(document).ready(function() {
             </tr>
             </table>
             </div>
-        {% endif %}
+        {%- endif -%}
 
         {%- if m.server -%}
             <div class="back">
