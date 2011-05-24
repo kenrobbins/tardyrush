@@ -1,7 +1,9 @@
 {% extends "layout.html" %}
 {% import 'helpers/gcal.html' as gcal %}
 {% block head %}
+<link type="text/css" rel="stylesheet" href="/static/qtip2/jquery.qtip.min.css"/>
 <script type="text/javascript" src="/static/main.min.js"></script>
+<script type="text/javascript" src="/static/qtip2/jquery.qtip.min.js"></script>
 <script type="text/javascript" src="/static/zeroclipboard/ZeroClipboard.min.js"></script>
 <script type="text/javascript">
 ZeroClipboard.setMoviePath( '{{url_for('static', filename='zeroclipboard/ZeroClipboard.swf',
@@ -18,6 +20,19 @@ $(document).ready(function() {
         {%- else -%}
             $('#match_{{m.id}}').hide();
         {%- endfor -%}
+        $('#recs_{{m.id}}').qtip({
+            content: {
+                text: $('#recs_table_{{m.id}}'),
+                title: { 
+                    text: 'Historical Records',
+                    button: true,
+                }
+            },
+            show: {
+                event: 'click',
+            },
+            hide: false
+        });
     {%- endfor -%}
 });
 </script>
@@ -27,12 +42,6 @@ $(document).ready(function() {
 
     {% macro status_buttons(m, cur_status) %}
         <div id="status_buttons_{{m.id}}" class="status_buttons">
-        {%- if cur_status != "available" -%}
-        {%- endif -%}
-        {%- if cur_status != "maybe" -%}
-        {%- endif -%}
-        {%- if cur_status != "unavailable" -%}
-        {%- endif -%}
         <form id="sb_available_{{m.id}}" method="post" action="{{
         url_for('matches.show', match_id=m.id, action='status') }}">
         {{ aform.hidden_tag('csrf') }}
@@ -63,7 +72,7 @@ $(document).ready(function() {
     <div class="match_block">
 
     <div class="icon_links">
-    <a href="{{gcal.link(m)}}"
+        <a href="{{gcal.link(m)}}"
         title="Add this match to Google Calendar"
         target="_blank"><img
         src="{{url_for('static', filename='googlecalendar.png')}}" /></a>
@@ -73,6 +82,9 @@ $(document).ready(function() {
         url_for('matches.show', action='edit',
         match_id=m.id)}}"><img src="/static/pencil.png" /></a>
         {%- endif -%}
+
+        <a class="recs" id="recs_{{m.id}}" href="#" onClick="return false;"><img
+        src="/static/chart_bar.png"/></a>
     </div>
         <h3 class="opponent">
         <a href="{{ url_for('matches.show', match_id=m.id) }}">{{ m.team.tag }} vs {{m.opponent.tag }}</a>
@@ -88,6 +100,29 @@ $(document).ready(function() {
         <h4>Competition</h4>
         <p>{{ m.competition.abbr }}</p>
         </div>
+
+        {% if records[m.id] %}
+            <div class="recs_table" id="recs_table_{{m.id}}">
+            <table>
+            <tr>
+            <th>vs {{ m.opponent.tag }} in {{ m.competition.abbr }} </th>
+            <td>{{ records[m.id][3]|record_format }}</td>
+            </tr>
+            <tr>
+            <th>vs {{ m.opponent.tag }}</th>
+            <td>{{ records[m.id][0]|record_format }}</td>
+            </tr>
+            <tr>
+            <th>in {{ m.competition.abbr }}</th>
+            <td>{{ records[m.id][1]|record_format }}</td>
+            </tr>
+            <tr>
+            <th>on {{ m.server.name }}</th>
+            <td>{{ records[m.id][2]|record_format }}</td>
+            </tr>
+            </table>
+            </div>
+        {% endif %}
 
         {%- if m.server -%}
             <div class="back">

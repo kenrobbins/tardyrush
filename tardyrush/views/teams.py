@@ -6,7 +6,8 @@ from tardyrush import db
 from tardyrush.views import require_login
 from tardyrush.helpers import rt, jsonify, abs_url_for, redirect
 from tardyrush.helpers.filters import *
-from tardyrush.helpers.teams import *
+from tardyrush.helpers.teams import is_founder, is_team_leader, \
+        is_on_current_team
 from tardyrush.models import \
         Team, TeamForm, TeamPlayersForm, LeaveTeamForm, JoinTeamForm, \
         CompletedMatch, CompletedMatchPlayer, CompletedMatchRound, \
@@ -354,6 +355,29 @@ def add():
 @teams.route('/teams/<int:team_id>/matches/')
 def matches(team_id=0):
     return matches_all(team_id)
+
+@teams.route('/team/<int:team_id>/records/')
+@teams.route('/teams/<int:team_id>/records/')
+def records(team_id=0):
+    api = request.values.get('api') == '1'
+
+    team = Team.query.filter_by(id=team_id).first()
+
+    if not team:
+        return redirect(url_for('all'))
+
+    match_id = request.values.get('match_id')
+    match = Match.query.filter_by(id=match_id).first()
+
+    if not match:
+        return redirect(url_for('all'))
+
+    ( opponent_rec, competition_rec, server_rec, opp_comp_rec ) = \
+            match.get_match_records(team_id)
+
+    return jsonify(success=True, opponent_rec=opponent_rec,
+            competition_rec=competition_rec, server_rec=server_rec, 
+            opp_comp_rec=opp_comp_rec)
 
 @teams.route('/team/<int:team_id>/stats/')
 @teams.route('/teams/<int:team_id>/stats/')

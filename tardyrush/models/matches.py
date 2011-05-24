@@ -8,6 +8,8 @@ from helpers import *
 from inputs import *
 from fields import *
 
+from results import CompletedMatch
+
 class MatchPlayer(db.Model):
     __tablename__ = 'match_players'
 
@@ -112,6 +114,83 @@ class Match(db.Model):
         self.password = kwargs['password']
         self.comments = kwargs['comments']
         self.date_created = kwargs['date_created']
+
+    def get_match_records(self, team_id=None):
+        if team_id is None:
+            team_id = self.team_id
+
+        opponent_rec = db.session.query(\
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins >\
+                                                CompletedMatch.losses, db.INT)), \
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins < \
+                                                CompletedMatch.losses, db.INT)), \
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins == \
+                                                CompletedMatch.losses, db.INT))\
+                ).\
+                filter(CompletedMatch.team_id == team_id).\
+                filter(CompletedMatch.opponent_id == self.opponent_id).\
+                first()
+
+        competition_rec = db.session.query(\
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins >\
+                                                CompletedMatch.losses, db.INT)), \
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins < \
+                                                CompletedMatch.losses, db.INT)), \
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins == \
+                                                CompletedMatch.losses, db.INT))\
+                ).\
+                filter(CompletedMatch.team_id == team_id).\
+                filter(CompletedMatch.competition_id == self.competition_id).\
+                first()
+
+        server_rec = db.session.query(\
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins >\
+                                                CompletedMatch.losses, db.INT)), \
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins < \
+                                                CompletedMatch.losses, db.INT)), \
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins == \
+                                                CompletedMatch.losses, db.INT))\
+                ).\
+                filter(CompletedMatch.team_id == team_id).\
+                filter(CompletedMatch.server_id == self.server_id).\
+                first()
+        
+        opp_comp_rec = db.session.query(\
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins >\
+                                                CompletedMatch.losses, db.INT)), \
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins < \
+                                                CompletedMatch.losses, db.INT)), \
+                                    db.func.sum(\
+                                        db.cast(CompletedMatch.wins == \
+                                                CompletedMatch.losses, db.INT))\
+                ).\
+                filter(CompletedMatch.team_id == team_id).\
+                filter(CompletedMatch.opponent_id == self.opponent_id).\
+                filter(CompletedMatch.competition_id == self.competition_id).\
+                first()
+
+        def zero(rec):
+            if rec == (None, None, None):
+                return (0, 0, 0)
+            return rec
+
+        opponent_rec    = zero(opponent_rec)
+        competition_rec = zero(competition_rec)
+        server_rec      = zero(server_rec)
+        opp_comp_rec    = zero(opp_comp_rec)
+
+        return ( opponent_rec, competition_rec, server_rec, opp_comp_rec )
 
 class MatchForm(Form):
     team_id = SelectField(u'Team', coerce=int, validators=[Required()])

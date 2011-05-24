@@ -114,6 +114,13 @@ def matches_time_format(value):
 def matches_datetime_format_full(value):
     return format_datetime(value, "EEEE',' MMMM d',' yyyy 'at' h':'mm a zzz")
 
+@app.template_filter()
+def record_format(value):
+    out = "%d-%d" % (value[0], value[1])
+    if value[2]:
+        out += "-%d" % (value[2])
+    return out
+
 def matches_datetime_format_full_for_team(dt, tz):
     return dates.format_datetime(dt,
             "EEEE',' MMMM d',' yyyy 'at' h':'mm a zzz",

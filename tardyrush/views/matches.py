@@ -303,8 +303,10 @@ def show(match_id, action):
                 except NoResultFound:
                     mu = MatchPlayer(match_id=match.id, user_id=g.user.id,
                                      status=player_status)
-                except:
-                    flash(u'Oops! There was an error!')
+                except Exception, e:
+                    app.logger.error('Error finding MatchPlayer: %s, %s' % \
+                            (g.user.id, e))
+                    flash(u'Oops! There was an error! Please try again.')
                     return redirect(url_for('my_matches'))
 
                 mu.date_updated = datetime.datetime.utcnow()
@@ -352,9 +354,15 @@ def my_matches():
             order_by(Match.id.asc()).\
             all()
 
+    records = dict()
+    for match in matches:
+        if match.id not in records:
+            records[match.id] = match.get_match_records()
+
     return rt('matches/availability.html',
         page={'top':'my_matches', 'sub':'upcoming'},
         aform = MatchPlayerStatusForm(),
+        records=records,
         matches=matches)
 
 @matches.route('/match/previous/')
