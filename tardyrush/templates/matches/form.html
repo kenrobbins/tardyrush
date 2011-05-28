@@ -83,7 +83,7 @@ $(document).ready(function() {
             <p>
                 {{ field.label }}
                 {% if field.name == 'date' -%}
-                <span>(in {{ None|user_time_zone }})</span>
+                <span>(in {{ user_tz_names[0] }})</span>
                 {%- endif -%}
                 <br/>
                 {% if field.errors -%}
@@ -101,7 +101,7 @@ $(document).ready(function() {
                 {% elif field.name == 'competition_id' %}
                 <span><a href="{{url_for('.contact')}}">or ask for a new competition</a></span>
                 {% elif field.name == 'date' -%}
-                <span>{{ 'zzz'|user_time_zone }} <a
+                <span>{{ user_tz_names[1] }} <a
                 href="{{url_for('account.settings')}}">or change your time zone</a></span>
                 {% endif -%}
             </p>

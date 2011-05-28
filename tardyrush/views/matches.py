@@ -172,10 +172,14 @@ def add():
     oform = OpponentForm()
     sform = ServerForm()
 
+    now = to_user_timezone(datetime.datetime.utcnow())
+    user_tz_names = (format_datetime(now, 'zzzz'), format_datetime(now, 'zzz'))
+
     return rt('matches/form.html', 
             page={'top':'my_matches', 'sub':'add_match'},
             adding=True,
             team_id=g.team_leader_teams[0],
+            user_tz_names=user_tz_names,
             oform=oform,
             sform=sform,
             form=form)
@@ -254,10 +258,14 @@ def show(match_id, action):
         oform = OpponentForm()
         sform = ServerForm()
 
+        now = to_user_timezone(datetime.datetime.utcnow())
+        user_tz_names = (format_datetime(now, 'zzzz'), format_datetime(now, 'zzz'))
+
         return rt('matches/form.html', form=form, players=players, 
                 page={'top':'my_matches', 'sub':up_prev},
                 when=up_prev,
                 adding=False,
+                user_tz_names=user_tz_names,
                 oform=oform,
                 sform=sform,
                 team_id=g.team_leader_teams[0],

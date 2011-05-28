@@ -81,13 +81,6 @@ def can_edit_team(team_id=None):
     return is_team_leader(team_id)
 
 @app.template_filter()
-def user_time_zone(fmt=None):
-    if not fmt:
-        fmt = 'zzzz'
-    return format_datetime(to_user_timezone(datetime.datetime.utcnow()),
-            fmt)
-
-@app.template_filter()
 def match_last_updated_format(value):
     return format_datetime(value, "MMM d 'at' h':'mm a")
 
