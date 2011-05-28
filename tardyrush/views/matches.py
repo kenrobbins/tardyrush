@@ -52,6 +52,7 @@ def add():
         elif request.values.get('new_server_id'):
             form.server_id.data = int(request.values.get('new_server_id'))
 
+        # default to tomorrow at 9pm
         form.date.data = datetime.datetime.combine((\
                     to_user_timezone(datetime.datetime.utcnow()) \
                         + datetime.timedelta(days=1))\
@@ -226,10 +227,10 @@ def show(match_id, action):
                 form.server_id.data = int(request.values.get('new_server_id'))
 
             form.date.data = to_user_timezone(form.date.data)
-        elif request.method == 'POST':
-            form.date.data = to_utc(form.date.data)
 
         if form.validate_on_submit():
+            form.date.data = to_utc(form.date.data)
+
             to_delete = []
             for f in form.players:
                 if f.delete.data:
