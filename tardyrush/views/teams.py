@@ -15,6 +15,8 @@ from tardyrush.models import \
         User, TeamPlayer
 from matches import all as matches_all
 
+from werkzeug.datastructures import ImmutableMultiDict
+
 teams = Module(__name__)
 
 @teams.route('/team/all/')
@@ -148,11 +150,17 @@ def show(team_id=-1, action=''):
             if team.name.lower() in team_names:
                 team_names.remove(team.name.lower())
 
-            form = TeamForm(request.form, obj=team, no_formdata = (action != 'edit'))
-            form.name.validators[0].values = team_names
+            if action == 'edit':
+                form = TeamForm(request.form, obj=team)
+                players_form = TeamPlayersForm(ImmutableMultiDict(), obj=team)
+            else:
+                form = TeamForm(ImmutableMultiDict(), obj=team)
+                players_form = TeamPlayersForm(request.form, obj=team)
 
-            players_form = TeamPlayersForm(request.form, obj=team,
-                    no_formdata=(action != 'edit_players'))
+            # make sure form has the latest csrf value
+            form.csrf.data = players_form.csrf.data
+
+            form.name.validators[0].values = team_names
 
             if action == 'edit':
                 players = {}
