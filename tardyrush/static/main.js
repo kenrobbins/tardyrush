@@ -75,22 +75,30 @@ function update_player_status(obj) {
 }
 
 function save_form(type) {
-    var type_pretty = type == 'opponent' ? 'Opponent' : 'Server';
     var form = $('#'+type+'_form');
     var csrf = form.find('input[name=csrf]').val();
-    var name = form.find('input[name=name]').val();
 
     data = {
         csrf: csrf,
-        name: name,
         api: '1'
     };
 
+    var update_type = 'added';
+    var type_pretty = null;
     if (type == 'opponent') {
+        type_pretty = 'Opponent';
+        data.name = form.find('input[name=name]').val();
         data.tag = form.find('input[name=tag]').val();
     }
-    else {
+    else if (type == 'server') {
+        type_pretty = 'Server';
+        data.name = form.find('input[name=name]').val();
         data.address = form.find('input[name=address]').val();
+    }
+    else { // time_zone
+        type_pretty = 'Time zone';
+        update_type = 'changed';
+        data.time_zone = form.find('select[name=time_zone]').val();
     }
 
     var url = form.attr('action');
@@ -99,31 +107,38 @@ function save_form(type) {
             update_csrf(data);
             form.find('.errors').remove();
             if (data.success) {
-                var newval = $("<option></option>").
-                    attr("value", data[type+'_id']).
-                    text(data[type+'_name']);
-                var sel = $('select#'+type+'_id');
-                var opts = sel.children("option");
-                var oname = data[type+'_name'].toLowerCase();
-                var added = false;
-                for (var i = 0; i < opts.length; ++i) {
-                    var o = $.trim($(opts[i]).html().toLowerCase());
-                    if (o > oname) {
-                        $(opts[i]).before(newval);
-                        added = true;
-                        break;
-                    }
+                if (type == 'time_zone') {
+                    $(".full_time_zone").html(data.user_tz_names[0]);
+                    $(".abbr_time_zone").html(data.user_tz_names[1]);
                 }
-                if (!added)
-                    sel.append(newval);
-                sel.val(data[type+'_id']);
+                else {
+                    var newval = $("<option></option>").
+                        attr("value", data[type+'_id']).
+                        text(data[type+'_name']);
+                    var sel = $('select#'+type+'_id');
+                    var opts = sel.children("option");
+                    var oname = data[type+'_name'].toLowerCase();
+                    var added = false;
+                    for (var i = 0; i < opts.length; ++i) {
+                        var o = $.trim($(opts[i]).html().toLowerCase());
+                        if (o > oname) {
+                            $(opts[i]).before(newval);
+                            added = true;
+                            break;
+                        }
+                    }
+                    if (!added)
+                        sel.append(newval);
+                    sel.val(data[type+'_id']);
+                }
 
                 $.fancybox.close();
 
                 form.find('input[type=text]').val('');
 
                 $('#match_form').before(
-                    '<p id="addflash">'+type_pretty+' added successfully.</p>');
+                    '<p id="addflash">'+type_pretty+' '+update_type+
+                    ' successfully.</p>');
                 $('#addflash').fadeIn(2500).delay(2000).fadeOut(2500);
 
                 (function (el) {

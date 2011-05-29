@@ -14,10 +14,16 @@ $(document).ready(function() {
     $('#server_form input[type=submit]').click(function() {
         return save_form('server');
     });
+    $('#time_zone_form input[type=submit]').click(function() {
+        return save_form('time_zone');
+    });
     $('#add_opp_link').fancybox({
         'titleShow' : false
     });
     $('#add_server_link').fancybox({
+        'titleShow' : false
+    });
+    $('#update_time_zone_link').fancybox({
         'titleShow' : false
     });
     $('#match_form input.date').datepicker({
@@ -83,7 +89,8 @@ $(document).ready(function() {
             <p>
                 {{ field.label }}
                 {% if field.name == 'date' -%}
-                <span>(in {{ user_tz_names[0] }})</span>
+                <span>(in <span class="full_time_zone">
+                {{ user_now|fmt_datetime('zzzz') }}</span>)</span>
                 {%- endif -%}
                 <br/>
                 {% if field.errors -%}
@@ -93,7 +100,7 @@ $(document).ready(function() {
                     </ul>
                     </div>
                 {% endif -%}
-                {{ field}}
+                {{ field }}
                 {% if field.name == 'opponent_id' %}
                 <span><a id="add_opp_link" href="#opponent_form_container" title="Add an opponent">or add an opponent</a></span>
                 {% elif field.name == 'server_id' %}
@@ -101,8 +108,11 @@ $(document).ready(function() {
                 {% elif field.name == 'competition_id' %}
                 <span><a href="{{url_for('.contact')}}">or ask for a new competition</a></span>
                 {% elif field.name == 'date' -%}
-                <span>{{ user_tz_names[1] }} <a
-                href="{{url_for('account.settings')}}">or change your time zone</a></span>
+                <span>
+                <span class="abbr_time_zone">{{ user_now|fmt_datetime('zzz') }}</span>
+                <a id="update_time_zone_link"
+                href="#time_zone_form_container">or change your time zone</a>
+                </span>
                 {% endif -%}
             </p>
             {% endif %}
@@ -137,6 +147,14 @@ $(document).ready(function() {
         <div id="server_form_container">
             <div>
             {{ forms.server(sform, g.team_leader_teams[0]) }}
+            </div>
+        </div>
+    </div>
+
+    <div style="display:none;">
+        <div id="time_zone_form_container">
+            <div>
+            {{ forms.time_zone(tzform) }}
             </div>
         </div>
     </div>

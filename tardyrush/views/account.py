@@ -1,11 +1,13 @@
 from flask import Module, g, session, flash, request, url_for
-from flaskext.babel import refresh as babel_refresh
+from flaskext.babel import refresh as babel_refresh, to_user_timezone
 from tardyrush import oid, app, db
 from tardyrush.views import require_login
 from tardyrush.helpers import rt, jsonify, abs_url_for, redirect
 from tardyrush.helpers.filters import *
 from tardyrush.helpers.teams import *
-from tardyrush.models import User, UserForm, UserSettingsForm
+from tardyrush.models import User, UserForm, UserSettingsForm, UserTimeZoneForm
+
+from datetime import datetime
 
 account = Module(__name__)
 
@@ -90,6 +92,26 @@ def create_profile():
     form.next.data = oid.get_next_url()
 
     return rt('account/create.html', form=form)
+
+@account.route('/settings/update_time_zone/', methods=('POST',))
+@require_login()
+def update_time_zone():
+    form = UserTimeZoneForm(request.form, obj=g.user)
+
+    if form.validate_on_submit():
+        form.populate_obj(g.user)
+        db.session.commit()
+        babel_refresh()
+        flash(u'Your time zone was successfully updated.')
+
+        now = to_user_timezone(datetime.utcnow())
+        user_tz_names = (format_datetime(now, 'zzzz'), format_datetime(now, 'zzz'))
+
+        return jsonify(success=True, time_zone=form.time_zone.data,
+                csrf=form.csrf.data, user_tz_names=user_tz_names)
+
+    flash(u'There was an error updating your time zone.')
+    return jsonify(success=False)
 
 @account.route('/settings/', methods=('GET','POST'))
 @require_login()

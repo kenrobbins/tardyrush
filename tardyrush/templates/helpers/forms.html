@@ -40,6 +40,32 @@
   </form>
 {% endmacro %}
 
+{% macro time_zone(form) %}
+    <h2>Update Time Zone</h2>
+    <form id="time_zone_form"
+    action="{{url_for('account.update_time_zone')}}" method="post">
+        {{ form.hidden_tag() }}
+
+        {% if form.errors %}
+            <p>Uh oh! Please fix the errors below and try again.</p>
+        {% endif %}
+
+        {% for field in form if field.type != 'HiddenField' -%}
+            <p>
+            {{ field.label }}<br/>
+            {% if field.errors -%}
+                <ul class="errors">
+                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                </ul>
+            {% endif -%}
+            {{ field }}
+            </p>
+        {% endfor -%}
+
+        <p><input type="submit" name="submit" value="Save"/></p>
+    </form>
+{% endmacro %}
+
 {% macro server(form, team_id, server_id=0) %}
   {% set adding = server_id == 0 %}
   <h2>{%- if adding %}Add{%-else%}Edit{%-endif%} Server</h2>

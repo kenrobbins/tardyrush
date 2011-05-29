@@ -72,3 +72,8 @@ class UserSettingsForm(Form):
             choices=User.EmailSettingsChoices, coerce=int,
             validators=[Required()])
 
+class UserTimeZoneForm(Form):
+    time_zone = SelectField(u'Time Zone', default="US/Eastern", \
+            choices=User.TimeZoneChoices,\
+            validators=[Required()])
+
