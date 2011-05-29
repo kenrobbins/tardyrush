@@ -216,8 +216,8 @@ function add_results_round() {
             {% elif field.name != 'final_result_method' %}
             <p>
                 {{ field.label }}
-                {% if field.name == 'date' -%}
-                <span>(in {{ None|user_time_zone }})</span>
+                {% if field.name == 'date_played' -%}
+                <span>(in {{ field.data|fmt_datetime('zzzz') }})</span>
                 {%- endif -%}
                 <br/>
                 {% if field.errors -%}
@@ -235,8 +235,8 @@ function add_results_round() {
                     {{ field }}
                 {% endif -%}
 
-                {% if field.name == 'date' -%}
-                <span>{{ 'zzz'|user_time_zone }}</span>
+                {% if field.name == 'date_played' -%}
+                <span>{{ field.data|fmt_datetime('zzz') }}</span>
                 {% endif -%}
             </p>
             {% endif %}
