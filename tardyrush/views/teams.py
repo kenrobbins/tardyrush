@@ -6,13 +6,14 @@ from tardyrush import db
 from tardyrush.views import require_login
 from tardyrush.helpers import rt, jsonify, abs_url_for, redirect
 from tardyrush.helpers.filters import *
+from tardyrush.helpers.consts import *
 from tardyrush.helpers.teams import is_founder, is_team_leader, \
-        is_on_current_team
+        is_on_current_team, grouper_id_to_int
 from tardyrush.models import \
         Team, TeamForm, TeamPlayersForm, LeaveTeamForm, JoinTeamForm, \
         CompletedMatch, CompletedMatchPlayer, CompletedMatchRound, \
-        MatchPlayer, Match, GameType, \
-        User, TeamPlayer
+        MatchPlayer, Match, GameType, Map, Game, \
+        User, TeamPlayer, Competition
 from matches import all as matches_all
 
 from werkzeug.datastructures import ImmutableMultiDict
@@ -400,6 +401,42 @@ def stats(team_id=0):
     else:
         page = { 'top' : 'team', 'sub' : 'player_stats' }
 
+    # only look at one game at a time.  but the tables only have competition
+    # id, so get the competition ids from the game id.
+    game_id = request.values.get('game') or 1
+
+    game = db.session.query(Game.id, Game.name).filter_by(id=game_id).one()
+
+    competitions = db.session.query(Competition.id, Competition.name).\
+            filter_by(game_id=game_id).all()
+
+    competition_ids = [ c.id for c in competitions ]
+
+    grouper_id = grouper_id_to_int(request.values.get('grouper'))
+
+    if grouper_id == StatsGrouperGametype:
+        grouper = CompletedMatchRound.gametype_id
+
+        gametypes = db.session.query(GameType.id, GameType.name).all()
+        ghash = dict()
+        for gt in gametypes:
+            ghash[gt.id] = gt.name
+    elif grouper_id == StatsGrouperMap:
+        grouper = CompletedMatchRound.map_id
+
+        maps = db.session.query(Map.id, Map.name).all()
+        ghash = dict()
+        for m in maps:
+            ghash[m.id] = m.name
+    elif grouper_id == StatsGrouperCompetition:
+        grouper = CompletedMatch.competition_id
+
+        ghash = dict()
+        for c in competitions:
+            ghash[c.id] = c.name
+    else:
+        return redirect(url_for('stats', team_id=team_id))
+
     ##########################################################
     # fetch totals
 
@@ -408,6 +445,7 @@ def stats(team_id=0):
             join((CompletedMatch,
                   CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
             filter(CompletedMatch.team_id == team_id).\
+            filter(CompletedMatch.competition_id.in_(competition_ids)).\
             group_by(CompletedMatchPlayer.cmatch_id).\
             group_by(CompletedMatchPlayer.user_id).\
             having(db.func.sum(CompletedMatchPlayer.kills) >=\
@@ -448,6 +486,7 @@ def stats(team_id=0):
                                record_subquery.c.cmatch_id\
                                )).\
                          filter(CompletedMatch.team_id == team_id).\
+                         filter(CompletedMatch.competition_id.in_(competition_ids)).\
                          group_by(record_subquery.c.user_id)
 
     stats_pm = dict()
@@ -463,6 +502,7 @@ def stats(team_id=0):
             join((CompletedMatch, 
                   CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
             filter(CompletedMatch.team_id == team_id).\
+            filter(CompletedMatch.competition_id.in_(competition_ids)).\
             group_by(CompletedMatchPlayer.user_id).\
             all()
 
@@ -488,9 +528,10 @@ def stats(team_id=0):
 
     ##########################################################
 
+
     pcount_subquery = \
             db.session.query(CompletedMatchPlayer.user_id,
-                             CompletedMatchRound.gametype_id).\
+                             grouper).\
             join((CompletedMatch,
                   CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
             join((CompletedMatchRound,\
@@ -500,19 +541,20 @@ def stats(team_id=0):
                           CompletedMatchPlayer.round_id,\
                   ))).\
             filter(CompletedMatch.team_id == team_id).\
-            group_by(CompletedMatchRound.gametype_id).\
+            filter(CompletedMatch.competition_id.in_(competition_ids)).\
+            group_by(grouper).\
             group_by(CompletedMatchPlayer.cmatch_id).\
             group_by(CompletedMatchPlayer.user_id).\
             having(db.func.sum(CompletedMatchPlayer.kills) >=\
                    db.func.sum(CompletedMatchPlayer.deaths)).\
             with_entities(CompletedMatchPlayer.user_id,\
-                          CompletedMatchRound.gametype_id).\
+                          grouper).\
             subquery()
 
     positive_counts = db.engine.execute( \
-            db.select(columns=['user_id', 'gametype_id', db.func.count()],\
+            db.select(columns=['user_id', grouper.key, db.func.count()],\
                       from_obj=pcount_subquery).\
-            group_by('gametype_id', 'user_id') )
+            group_by(grouper.key, 'user_id') )
    
     pcounts = dict()
     for p in positive_counts:
@@ -520,7 +562,7 @@ def stats(team_id=0):
 
     record_subquery = \
             db.session.query(CompletedMatchPlayer.user_id,
-                             CompletedMatchRound.gametype_id,
+                             grouper,
                              CompletedMatchPlayer.cmatch_id).\
             join((CompletedMatchRound,\
                   db.and_(\
@@ -528,18 +570,24 @@ def stats(team_id=0):
                           CompletedMatchPlayer.cmatch_id,\
                       CompletedMatchRound.round_id ==\
                           CompletedMatchPlayer.round_id,\
-                  ))).\
-            group_by(CompletedMatchRound.gametype_id).\
+                  )))
+
+    if grouper.key == 'competition_id':
+        record_subquery = record_subquery.\
+                filter(CompletedMatch.id == CompletedMatchPlayer.cmatch_id)
+
+    record_subquery = record_subquery.\
+            group_by(grouper).\
             group_by(CompletedMatchPlayer.cmatch_id).\
             group_by(CompletedMatchPlayer.user_id).\
-            with_entities(CompletedMatchPlayer.user_id,\
-                          CompletedMatchRound.gametype_id,
+            with_entities(CompletedMatchPlayer.user_id,
+                          grouper,
                           CompletedMatchPlayer.cmatch_id).\
             subquery()
 
     records = db.session.query(\
-            record_subquery.c.user_id,
-                               record_subquery.c.gametype_id,
+                               record_subquery.c.user_id,
+                               record_subquery.c.get(grouper.key),
                                db.func.sum(\
                                    db.cast(CompletedMatch.wins >\
                                            CompletedMatch.losses, db.INT)), \
@@ -553,7 +601,9 @@ def stats(team_id=0):
                                record_subquery.c.cmatch_id\
                                )).\
                          filter(CompletedMatch.team_id == team_id).\
-                         group_by(record_subquery.c.gametype_id).\
+                         filter(CompletedMatch.competition_id.\
+                                    in_(competition_ids)).\
+                         group_by(record_subquery.c.get(grouper.key)).\
                          group_by(record_subquery.c.user_id)
 
     stats_pm = dict()
@@ -561,7 +611,7 @@ def stats(team_id=0):
         stats_pm[ (s[0], s[1]) ] = (s[2], s[3])
 
     stats_res = db.session.query(CompletedMatchPlayer.user_id,
-                                 CompletedMatchRound.gametype_id,
+                                 grouper,
                                  db.func.sum(CompletedMatchPlayer.kills),
                                  db.func.sum(CompletedMatchPlayer.deaths),
                                  db.func.sum(CompletedMatchPlayer.off_objs),
@@ -576,7 +626,8 @@ def stats(team_id=0):
                           CompletedMatchPlayer.round_id,\
                   ))).\
             filter(CompletedMatch.team_id == team_id).\
-            group_by(CompletedMatchRound.gametype_id).\
+            filter(CompletedMatch.competition_id.in_(competition_ids)).\
+            group_by(grouper).\
             group_by(CompletedMatchPlayer.user_id).\
             all()
 
@@ -590,7 +641,7 @@ def stats(team_id=0):
         if (s[0], s[1]) in pcounts:
             pos_kdr = pcounts[ (s[0], s[1]) ]
         stats_item = { 'user_id' : s[0],
-                       'gametype_id' : s[1],
+                       'grouper' : s[1],
                        'kills' : s[2],
                        'deaths' : s[3],
                        'offobjs' : s[4],
@@ -601,39 +652,56 @@ def stats(team_id=0):
                      }
         stats.append(stats_item)
 
-    cmatches = db.session.query(CompletedMatchRound.gametype_id,
-            CompletedMatchRound.cmatch_id,
-            CompletedMatch.wins, CompletedMatch.losses).\
-            join(CompletedMatch).\
-            filter_by(team_id=team_id).all()
+    if grouper.key == 'competition_id':
+        cmatches = db.session.query(grouper,
+                CompletedMatch.id,
+                CompletedMatch.wins, CompletedMatch.losses,\
+                CompletedMatch.final_result_method).\
+                filter_by(team_id=team_id).\
+                filter(CompletedMatch.competition_id.in_(competition_ids)).\
+                all()
+    else:
+        cmatches = db.session.query(grouper,
+                CompletedMatchRound.cmatch_id,
+                CompletedMatch.wins, CompletedMatch.losses,\
+                CompletedMatch.final_result_method).\
+                join(CompletedMatch).\
+                filter_by(team_id=team_id).\
+                filter(CompletedMatch.competition_id.in_(competition_ids)).\
+                all()
 
-    # TODO: do this in sql
     total_wins = 0
     total_losses = 0
     total_draws = 0
     seen_matches = set()
+    seen_match_grouper = set()
     wins = collections.defaultdict(int)
     losses = collections.defaultdict(int)
     draws = collections.defaultdict(int)
     for c in cmatches:
-        if (c.cmatch_id, c.gametype_id) in seen_matches:
+        if c.final_result_method == CompletedMatch.FinalResultByForfeit:
             continue
-        seen_matches.add((c.cmatch_id, c.gametype_id))
-        wins[c.gametype_id] += 0
+        val = c[0]
+        cmatch_id = c[1]
+        if (c[1], val) in seen_match_grouper:
+            continue
+        seen_match_grouper.add((c[1], val))
+        wins[val] += 0
         if c.wins > c.losses:
-            wins[c.gametype_id] += 1
-            total_wins += 1
+            wins[val] += 1
         elif c.wins < c.losses:
-            losses[c.gametype_id] += 1
-            total_losses += 1
+            losses[val] += 1
         else:
-            draws[c.gametype_id] += 1
-            total_draws += 1
+            draws[val] += 1
 
-    gametypes = GameType.query.all()
-    gthash = dict()
-    for gt in gametypes:
-        gthash[gt.id] = gt.name
+        if c[1] not in seen_matches:
+            seen_matches.add(c[1])
+            if c.wins > c.losses:
+                total_wins += 1
+            elif c.wins < c.losses:
+                total_losses += 1
+            else:
+                total_draws += 1
 
     phash = dict()
     for p in team.players:
@@ -641,10 +709,11 @@ def stats(team_id=0):
 
     return rt('teams/stats.html', 
             page=page,
+            game=game,
             stats=stats,
             stats_pm=stats_pm,
             pcounts=pcounts,
-            gthash=gthash,
+            ghash=ghash,
             phash=phash,
             wins=wins, losses=losses, draws=draws,
             total_stats=total_stats,

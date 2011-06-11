@@ -200,13 +200,15 @@ class MatchForm(Form):
             validators=[Required()])
     server_id = SelectField(u'Server', coerce=int, validators=[Required()])
     date = MatchDateTimeField(u'Date', validators=[Required()])
-    #size = HiddenIntegerField(u'Size', default=6, \
-    #        validators=[NumberRange(min=0,max=100), Required()])
     password = TextField(u'Server Password', \
             validators=[Length(min=0,max=100), Optional()])
     comments = TextAreaField(u'Comments', validators=[Optional()])
 
     players = FieldList(FormField(MatchPlayerForm))
+
+class AddMatchForm(MatchForm):
+    send_notification = BooleanField(u'Send email?', default=True)
+    post_on_forums = BooleanField(u'Post on forums?', default=True)
 
 class MatchMap(db.Model):
     __tablename__ = 'match_maps'

@@ -89,10 +89,12 @@ $(document).ready(function() {
             <p>
                 {{ field.label }}
                 {% if field.name == 'date' -%}
-                <span>(in <span class="full_time_zone">
-                {{ user_now|fmt_datetime('zzzz') }}</span>)</span>
+                    <span>(in <span class="full_time_zone">
+                    {{ user_now|fmt_datetime('zzzz') }}</span>)</span>
                 {%- endif -%}
-                <br/>
+                {% if field.type != 'BooleanField' %}
+                    <br/>
+                {% endif %}
                 {% if field.errors -%}
                     <div class="errors">
                     <ul>

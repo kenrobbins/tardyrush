@@ -19,7 +19,7 @@ from tardyrush.views import require_login
 from tardyrush.models import \
         Team, TeamPlayer, MatchPlayerStatusForm, Competition, \
         Opponent, OpponentForm, ServerForm, \
-        MatchPlayer, Match, Server, MatchForm, \
+        MatchPlayer, Match, Server, MatchForm, AddMatchForm, \
         User, ForumBotQueuedPost, UserTimeZoneForm
 
 matches = Module(__name__)
@@ -40,7 +40,7 @@ def add():
             order_by('server_name')
     competitions = Competition.query.order_by('competition_name')
 
-    form = MatchForm()
+    form = AddMatchForm()
     form.team_id.choices = [ (t, g.teams[t]) for t in g.team_leader_teams ]
     form.competition_id.choices = [(c.id, c.name) for c in competitions ]
     form.server_id.choices = [ (s.id, s.name) for s in servers ]
@@ -141,30 +141,32 @@ def add():
                     filter(TeamPlayer.team_id==form.team_id.data).\
                     filter(User.email_settings==User.EmailMatchAdded)
 
-            try:
-                with mail.connect() as conn:
-                    for p in players:
-                        try:
-                            msg = Message(recipients=[p.email],
-                                          body=message,
-                                          subject=subject,
-                                          sender=Sender)
-                            conn.send(msg)
-                            app.logger.info("Sent mail to: %s" % p.email)
-                        except Exception, e:
-                            app.logger.error("Error sending mail: %s, %s" % \
-                                    (p.email, e))
-            except Exception, e:
-                app.logger.error("Error sending mail: %s" % e)
+            if form.send_notification.data:
+                try:
+                    with mail.connect() as conn:
+                        for p in players:
+                            try:
+                                msg = Message(recipients=[p.email],
+                                              body=message,
+                                              subject=subject,
+                                              sender=Sender)
+                                conn.send(msg)
+                                app.logger.info("Sent mail to: %s" % p.email)
+                            except Exception, e:
+                                app.logger.error("Error sending mail: %s, %s" % \
+                                        (p.email, e))
+                except Exception, e:
+                    app.logger.error("Error sending mail: %s" % e)
 
             # now notify players of new match via forum post
-            forum_post = ForumBotQueuedPost(team_id=match.team_id,
-                                            game_id=match.competition.game_id,
-                                            match_id=match.id,
-                                            subject=team_subject,
-                                            message=team_message)
-            db.session.add(forum_post)
-            db.session.commit()
+            if form.post_on_forums.data:
+                forum_post = ForumBotQueuedPost(team_id=match.team_id,
+                                                game_id=match.competition.game_id,
+                                                match_id=match.id,
+                                                subject=team_subject,
+                                                message=team_message)
+                db.session.add(forum_post)
+                db.session.commit()
 
             flash(u'The match was successfully added.')
             return redirect(url_for('my_matches'))

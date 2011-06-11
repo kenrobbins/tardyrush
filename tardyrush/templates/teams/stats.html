@@ -61,6 +61,15 @@ $(document).ready(function(){
 
     <h2>Stats</h2>
 
+    <h3>{{ game.name }}</h3>
+
+    <p>
+    Group by:
+    <a href="?game={{game.id}}&amp;grouper=gametype">Gametype</a>,
+    <a href="?game={{game.id}}&amp;grouper=map">Map</a>,
+    <a href="?game={{game.id}}&amp;grouper=competition">Competition</a>
+    </p>
+
     <h3>Total Stats
         (Team Record:
         {{ total_wins }}-{{ total_losses }}
@@ -71,9 +80,8 @@ $(document).ready(function(){
 
     {{ stats_header(total_stats, phash) }}
 
-
-    {% for group in stats|groupby('gametype_id') %}
-        <h3>{{ gthash[group.grouper] }}
+    {% for group in stats|groupby('grouper') %}
+        <h3>{{ ghash[group.grouper] }}
         {% if group.grouper in wins -%}
             (Team Record:
             {{ wins[group.grouper] }}-{{ losses[group.grouper] }}
