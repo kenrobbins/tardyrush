@@ -10,15 +10,14 @@ def post_to_vbulletin_3_7(url, forum_id, username, password, subject, message):
 
     url = url.strip('/')
 
-    br = mechanize.Browser()
-    br.open(url)
-
     def find_login_form(form):
         if re.search("login\.php", form.action):
             return True
         return False
 
     try:
+        br = mechanize.Browser()
+        br.open(url)
         br.select_form(predicate=find_login_form)
 
         br["vb_login_username"] = username
@@ -97,14 +96,17 @@ for p in posts:
                     p.match.forum_post_url = forum_post_url
                     commit = True
                     remove = True
+                    print "Removing becaues successful post"
 
     if p.date_created:
         time_since_created = datetime.utcnow() - p.date_created
 
         # remove if in the queue for more than 1 hour
         if time_since_created.seconds > (3600 * 1):
+            print "Removing because old:", datetime.utcnow(), p.date_created, time_since_created
             remove = True
     else:
+        print "Removing because no date_created"
         remove = True
 
     if remove:
