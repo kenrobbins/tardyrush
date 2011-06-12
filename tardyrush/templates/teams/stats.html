@@ -20,7 +20,7 @@ $(document).ready(function(){
 </script>
 {% endblock %}
 
-{% macro stats_header(stats, phash) %}
+{% macro stats_header(stats, phash, is_total) %}
     <table class="team_player_stats">
     <thead>
     <tr>
@@ -31,8 +31,11 @@ $(document).ready(function(){
     <th>Kills</th>
     <th>Deaths</th>
     <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
-    <th>Offensive<br/>Objectives</th>
-    <th>Defensive<br/>Objectives</th>
+    <th>Off<br/>Objs</th>
+    <th>Def<br/>Objs</th>
+    {%- if not is_total -%}
+        <th>Team<br/>Score</th>
+    {%- endif -%}
     </tr>
     </thead>
   
@@ -49,6 +52,9 @@ $(document).ready(function(){
             <td>{{ "%.2f"|kdr(s.kills, s.deaths)|safe }}</td>
             <td>{{ s.offobjs }}</td>
             <td>{{ s.defobjs }}</td>
+            {%- if not is_total -%}
+                <td>{{ "%.2f"|format(s.team_score) }}</td>
+            {% endif %}
             </tr>
         {% endif %}
     {% endfor %}
@@ -78,7 +84,7 @@ $(document).ready(function(){
         {%- endif -%})
     </h3>
 
-    {{ stats_header(total_stats, phash) }}
+    {{ stats_header(total_stats, phash, true) }}
 
     {% for group in stats|groupby('grouper') %}
         <h3>{{ ghash[group.grouper] }}
@@ -91,7 +97,7 @@ $(document).ready(function(){
         {%- endif -%}
         </h3>
 
-        {{ stats_header(group.list, phash) }}
+        {{ stats_header(group.list, phash, false) }}
       
         </table>
     {% endfor %}

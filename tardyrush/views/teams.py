@@ -515,11 +515,16 @@ def stats(team_id=0):
             w, l = stats_pm[ s[0] ]
         if s[0] in pcounts:
             pos_kdr = pcounts[ s[0] ]
+        if (w+l) == 0:
+            ts = 0
+        else:
+            ts = float(s[3] + s[4]) / float(w+l)
         stats_item = { 'user_id' : s[0],
                        'kills' : s[1],
                        'deaths' : s[2],
                        'offobjs' : s[3],
                        'defobjs' : s[4],
+                       'team_score' : ts,
                        'wins' : w,
                        'losses' : l,
                        'pos_kdr' : pos_kdr
@@ -640,12 +645,17 @@ def stats(team_id=0):
             w, l = stats_pm[ (s[0], s[1]) ]
         if (s[0], s[1]) in pcounts:
             pos_kdr = pcounts[ (s[0], s[1]) ]
+        if (w+l) == 0:
+            ts = 0
+        else:
+            ts = float(s[4] + s[5]) / float(w+l)
         stats_item = { 'user_id' : s[0],
                        'grouper' : s[1],
                        'kills' : s[2],
                        'deaths' : s[3],
                        'offobjs' : s[4],
                        'defobjs' : s[5],
+                       'team_score' : ts,
                        'wins' : w,
                        'losses' : l,
                        'pos_kdr' : pos_kdr
