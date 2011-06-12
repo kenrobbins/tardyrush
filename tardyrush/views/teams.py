@@ -12,7 +12,7 @@ from tardyrush.helpers.teams import is_founder, is_team_leader, \
 from tardyrush.models import \
         Team, TeamForm, TeamPlayersForm, LeaveTeamForm, JoinTeamForm, \
         CompletedMatch, CompletedMatchPlayer, CompletedMatchRound, \
-        MatchPlayer, Match, GameType, Map, Game, \
+        MatchPlayer, Match, GameType, Map, Game, PlayerStatsCombineForm, \
         User, TeamPlayer, Competition
 from matches import all as matches_all
 
@@ -407,24 +407,39 @@ def stats(team_id=0):
 
     game = db.session.query(Game.id, Game.name).filter_by(id=game_id).one()
 
-    competitions = db.session.query(Competition.id, Competition.name).\
-            filter_by(game_id=game_id).all()
+    competitions = db.session.query(Competition.id,
+                                    Competition.abbr,
+                                    Competition.name).\
+            filter_by(game_id=game_id).order_by(Competition.abbr).all()
+    gametypes = db.session.query(GameType.id, GameType.name).\
+            order_by(GameType.name).\
+            all()
+    maps = db.session.query(Map.id, Map.name).order_by(Map.name).all()
 
     competition_ids = [ c.id for c in competitions ]
+
+    combine_form = PlayerStatsCombineForm()
+    combine_form.competition.choices = [ (0, "Competition"), (0, "Any") ]
+    combine_form.gametype.choices = [ (0, "Game Type"), (0, "Any") ]
+    combine_form.map.choices = [ (0, "Map"), (0, "Any") ]
+    combine_form.competition.choices.extend([ (c.id, c.abbr) for c in\
+        competitions ])
+    combine_form.gametype.choices.extend([ (gt.id, gt.name) for gt in\
+        gametypes ])
+    combine_form.map.choices.extend([ (m.id, m.name) for m in\
+        maps ])
 
     grouper_id = grouper_id_to_int(request.values.get('grouper'))
 
     if grouper_id == StatsGrouperGametype:
         grouper = CompletedMatchRound.gametype_id
 
-        gametypes = db.session.query(GameType.id, GameType.name).all()
         ghash = dict()
         for gt in gametypes:
             ghash[gt.id] = gt.name
     elif grouper_id == StatsGrouperMap:
         grouper = CompletedMatchRound.map_id
 
-        maps = db.session.query(Map.id, Map.name).all()
         ghash = dict()
         for m in maps:
             ghash[m.id] = m.name
@@ -665,19 +680,23 @@ def stats(team_id=0):
     if grouper.key == 'competition_id':
         cmatches = db.session.query(grouper,
                 CompletedMatch.id,
-                CompletedMatch.wins, CompletedMatch.losses,\
-                CompletedMatch.final_result_method).\
+                CompletedMatch.wins, 
+                CompletedMatch.losses).\
                 filter_by(team_id=team_id).\
                 filter(CompletedMatch.competition_id.in_(competition_ids)).\
+                filter(CompletedMatch.final_result_method !=\
+                       CompletedMatch.FinalResultByForfeit).\
                 all()
     else:
         cmatches = db.session.query(grouper,
                 CompletedMatchRound.cmatch_id,
-                CompletedMatch.wins, CompletedMatch.losses,\
-                CompletedMatch.final_result_method).\
+                CompletedMatch.wins,
+                CompletedMatch.losses).\
                 join(CompletedMatch).\
                 filter_by(team_id=team_id).\
                 filter(CompletedMatch.competition_id.in_(competition_ids)).\
+                filter(CompletedMatch.final_result_method !=\
+                       CompletedMatch.FinalResultByForfeit).\
                 all()
 
     total_wins = 0
@@ -689,13 +708,11 @@ def stats(team_id=0):
     losses = collections.defaultdict(int)
     draws = collections.defaultdict(int)
     for c in cmatches:
-        if c.final_result_method == CompletedMatch.FinalResultByForfeit:
-            continue
         val = c[0]
         cmatch_id = c[1]
-        if (c[1], val) in seen_match_grouper:
+        if (cmatch_id, val) in seen_match_grouper:
             continue
-        seen_match_grouper.add((c[1], val))
+        seen_match_grouper.add((cmatch_id, val))
         wins[val] += 0
         if c.wins > c.losses:
             wins[val] += 1
@@ -704,8 +721,8 @@ def stats(team_id=0):
         else:
             draws[val] += 1
 
-        if c[1] not in seen_matches:
-            seen_matches.add(c[1])
+        if cmatch_id not in seen_matches:
+            seen_matches.add(cmatch_id)
             if c.wins > c.losses:
                 total_wins += 1
             elif c.wins < c.losses:
@@ -721,13 +738,282 @@ def stats(team_id=0):
             page=page,
             game=game,
             stats=stats,
-            stats_pm=stats_pm,
             pcounts=pcounts,
             ghash=ghash,
             phash=phash,
+            combine_form=combine_form,
+            grouper=grouper.key[:-3],
             wins=wins, losses=losses, draws=draws,
             total_stats=total_stats,
             total_wins=total_wins, total_losses=total_losses,
             total_draws=total_draws,
             team=team)
 
+@teams.route('/team/<int:team_id>/stats/combined/')
+def combined_stats(team_id=0):
+    team = Team.query.filter_by(id=team_id).first()
+
+    if not team:
+        return redirect(url_for('all'))
+
+    if team_id in g.teams:
+        page = { 'top' : 'my_teams', 'sub' : 'player_stats' }
+    else:
+        page = { 'top' : 'team', 'sub' : 'player_stats' }
+
+    game_id = request.values.get('game') or 1
+
+    game = db.session.query(Game.id, Game.name).filter_by(id=game_id).one()
+
+    competitions = db.session.query(Competition.id, Competition.name).\
+            filter_by(game_id=game_id).all()
+
+    competition_ids = [ c.id for c in competitions ]
+
+    gametype_id = int(request.values.get('gametype') or 0)
+    map_id = int(request.values.get('map') or 0)
+    competition_id = int(request.values.get('competition') or 0)
+
+    competitions = db.session.query(Competition.id,
+                                    Competition.abbr,
+                                    Competition.name).\
+            filter_by(game_id=game_id).order_by(Competition.abbr).all()
+    gametypes = db.session.query(GameType.id, GameType.name).\
+            order_by(GameType.name).\
+            all()
+    maps = db.session.query(Map.id, Map.name).order_by(Map.name).all()
+
+    competition = next((v for v in competitions if v.id == competition_id), None)
+    gametype = next((v for v in gametypes if v.id == gametype_id), None)
+    mapp = next((v for v in maps if v.id == map_id), None)
+
+    if not gametype and not mapp and not competition:
+        return redirect(url_for('stats', team_id=team_id))
+
+    combine_form = PlayerStatsCombineForm()
+    combine_form.competition.choices = [ (0, "Competition"), (0, "Any") ]
+    combine_form.gametype.choices = [ (0, "Game Type"), (0, "Any") ]
+    combine_form.map.choices = [ (0, "Map"), (0, "Any") ]
+    combine_form.competition.choices.extend([ (c.id, c.abbr) for c in\
+        competitions ])
+    combine_form.gametype.choices.extend([ (gt.id, gt.name) for gt in\
+        gametypes ])
+    combine_form.map.choices.extend([ (m.id, m.name) for m in\
+        maps ])
+
+    combine_form.competition.data = competition_id
+    combine_form.gametype.data = gametype_id
+    combine_form.map.data = map_id
+
+    pcount_subquery = \
+            db.session.query(CompletedMatchPlayer.user_id,
+                             CompletedMatchRound.gametype_id,
+                             CompletedMatchRound.map_id,
+                             CompletedMatch.competition_id).\
+            join((CompletedMatch,
+                  CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
+            join((CompletedMatchRound,\
+                  db.and_(\
+                      CompletedMatchRound.cmatch_id == CompletedMatch.id,\
+                      CompletedMatchRound.round_id ==\
+                          CompletedMatchPlayer.round_id,\
+                  ))).\
+            filter(CompletedMatch.team_id == team_id)
+
+    if gametype_id:
+        pcount_subquery = pcount_subquery.filter_by(gametype_id=gametype_id)
+    if map_id:
+        pcount_subquery = pcount_subquery.filter_by(map_id=map_id)
+    if competition_id:
+        pcount_subquery = pcount_subquery.\
+                filter(CompletedMatch.competition_id == competition_id)
+    else:
+        pcount_subquery = pcount_subquery.\
+                filter(CompletedMatch.competition_id.in_(competition_ids))
+
+    pcount_subquery = pcount_subquery.\
+            group_by(CompletedMatchPlayer.cmatch_id).\
+            group_by(CompletedMatchPlayer.user_id).\
+            having(db.func.sum(CompletedMatchPlayer.kills) >=\
+                   db.func.sum(CompletedMatchPlayer.deaths)).\
+            with_entities(CompletedMatchPlayer.user_id).\
+            subquery()
+
+    positive_counts = db.engine.execute( \
+            db.select(columns=['user_id', db.func.count()],\
+                      from_obj=pcount_subquery).\
+            group_by('user_id') )
+   
+    pcounts = dict()
+    for p in positive_counts:
+        pcounts[ p[0] ] = p[1]
+
+    record_subquery = \
+            db.session.query(CompletedMatchPlayer.user_id,
+                             CompletedMatch.competition_id,
+                             CompletedMatchPlayer.cmatch_id).\
+            join((CompletedMatchRound,\
+                  db.and_(\
+                      CompletedMatchRound.cmatch_id ==\
+                          CompletedMatchPlayer.cmatch_id,\
+                      CompletedMatchRound.round_id ==\
+                          CompletedMatchPlayer.round_id,\
+                  )))
+
+    if gametype_id:
+        record_subquery = record_subquery.filter_by(gametype_id=gametype_id)
+    if map_id:
+        record_subquery = record_subquery.filter_by(map_id=map_id)
+    if competition_id:
+        record_subquery = record_subquery.\
+                filter(CompletedMatch.competition_id == competition_id)
+
+    record_subquery = record_subquery.\
+            filter(CompletedMatch.id == CompletedMatchPlayer.cmatch_id).\
+            group_by(CompletedMatchPlayer.cmatch_id).\
+            group_by(CompletedMatchPlayer.user_id).\
+            with_entities(CompletedMatchPlayer.user_id,
+                          CompletedMatchPlayer.cmatch_id).\
+            subquery()
+
+    records = db.session.query(\
+                               record_subquery.c.user_id,
+                               db.func.sum(\
+                                   db.cast(CompletedMatch.wins >\
+                                           CompletedMatch.losses, db.INT)), \
+                               db.func.sum(\
+                                   db.cast(CompletedMatch.losses >\
+                                           CompletedMatch.wins, db.INT))\
+                              ).\
+                         select_from(CompletedMatch).\
+                         join((record_subquery,\
+                               CompletedMatch.id ==\
+                               record_subquery.c.cmatch_id\
+                               )).\
+                         filter(CompletedMatch.team_id == team_id).\
+                         filter(CompletedMatch.competition_id.\
+                                    in_(competition_ids)).\
+                         group_by(record_subquery.c.user_id)
+
+    stats_pm = dict()
+    for s in records:
+        stats_pm[ s[0] ] = (s[1], s[2])
+
+    stats_res = db.session.query(CompletedMatchPlayer.user_id,
+                                 db.func.sum(CompletedMatchPlayer.kills),
+                                 db.func.sum(CompletedMatchPlayer.deaths),
+                                 db.func.sum(CompletedMatchPlayer.off_objs),
+                                 db.func.sum(CompletedMatchPlayer.def_objs),
+                  db.func.count(db.func.distinct(CompletedMatch.id))).\
+            join((CompletedMatch, 
+                  CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
+            join((CompletedMatchRound,\
+                  db.and_(\
+                      CompletedMatchRound.cmatch_id == CompletedMatch.id,\
+                      CompletedMatchRound.round_id ==\
+                          CompletedMatchPlayer.round_id,\
+                  ))).\
+            filter(CompletedMatch.team_id == team_id)
+
+    if gametype_id:
+        stats_res = stats_res.filter_by(gametype_id=gametype_id)
+    if map_id:
+        stats_res = stats_res.filter_by(map_id=map_id)
+    if competition_id:
+        stats_res = stats_res.\
+                filter(CompletedMatch.competition_id == competition_id)
+    else:
+        stats_res = stats_res.\
+                filter(CompletedMatch.competition_id.in_(competition_ids))
+
+    stats_res = stats_res.\
+            group_by(CompletedMatchPlayer.user_id).\
+            all()
+
+    stats = []
+    for s in stats_res:
+        w = 0
+        l = 0
+        pos_kdr = 0
+        if s[0] in stats_pm:
+            w, l = stats_pm[ s[0] ]
+        if s[0] in pcounts:
+            pos_kdr = pcounts[ s[0] ]
+        if (w+l) == 0:
+            ts = 0
+        else:
+            ts = float(s[3] + s[4]) / float(w+l)
+        stats_item = { 'user_id' : s[0],
+                       'kills' : s[1],
+                       'deaths' : s[2],
+                       'offobjs' : s[3],
+                       'defobjs' : s[4],
+                       'team_score' : ts,
+                       'wins' : w,
+                       'losses' : l,
+                       'pos_kdr' : pos_kdr
+                     }
+        stats.append(stats_item)
+
+    # team record
+
+    cmatches = db.session.query(\
+            CompletedMatchRound.cmatch_id,
+            CompletedMatch.wins,
+            CompletedMatch.losses,\
+            CompletedMatch.final_result_method).\
+            join(CompletedMatch).\
+            filter_by(team_id=team_id).\
+            filter(CompletedMatch.final_result_method !=\
+                   CompletedMatch.FinalResultByForfeit)
+
+    if gametype_id:
+        cmatches = cmatches.\
+                filter(CompletedMatchRound.gametype_id == gametype_id)
+    if map_id:
+        cmatches = cmatches.\
+                filter(CompletedMatchRound.map_id == map_id)
+    if competition_id:
+        cmatches = cmatches.\
+                filter(CompletedMatch.competition_id == competition_id)
+    else:
+        cmatches = cmatches.\
+                filter(CompletedMatch.competition_id.in_(competition_ids))
+
+    cmatches = cmatches.all()
+
+    total_wins = 0
+    total_losses = 0
+    total_draws = 0
+    seen_matches = set()
+    for c in cmatches:
+        cmatch_id = c[0]
+        if cmatch_id in seen_matches:
+            continue
+        seen_matches.add(cmatch_id)
+
+        if c.wins > c.losses:
+            total_wins += 1
+        elif c.wins < c.losses:
+            total_losses += 1
+        else:
+            total_draws += 1
+
+    phash = dict()
+    for p in team.players:
+        phash[p.user_id] = p.user.name
+
+    return rt('teams/stats.html', 
+            page=page,
+            game=game,
+            total_stats=stats,
+            stats=[],
+            phash=phash,
+            gametype=gametype,
+            map=mapp,
+            combine_form=combine_form,
+            competition=competition,
+            total_wins=total_wins,
+            total_losses=total_losses,
+            total_draws=total_draws,
+            team=team)

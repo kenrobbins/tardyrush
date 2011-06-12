@@ -7,4 +7,4 @@ StatsGrouperGametype = 1
 StatsGrouperMap = 2
 StatsGrouperCompetition = 3
 
-StatsGrouperDefault = StatsGrouperGametype
+StatsGrouperDefault = StatsGrouperCompetition

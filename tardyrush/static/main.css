@@ -682,8 +682,11 @@ table.round_map th span {
 .res_loss { color: #b00; }
 .res_draw { color: #777; }
 
+.team_player_stats {
+    font-size: 95%;
+}
 .team_player_stats th {
-    font-size: 90%;
+    font-size: 85%;
 }
 
 .recs_table { display: none; }
@@ -699,3 +702,5 @@ table.round_map th span {
 .recs_table th, .recs_table td {
     padding: 4px 6px;
 }
+
+#stats_view_all .selected_view { font-weight: bold; }

@@ -31,8 +31,8 @@ $(document).ready(function(){
     <th>Kills</th>
     <th>Deaths</th>
     <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
-    <th>Off<br/>Objs</th>
-    <th>Def<br/>Objs</th>
+    <th>Offensive<br/>Objectives</th>
+    <th>Defensive<br/>Objectives</th>
     {%- if not is_total -%}
         <th>Team<br/>Score</th>
     {%- endif -%}
@@ -69,14 +69,35 @@ $(document).ready(function(){
 
     <h3>{{ game.name }}</h3>
 
-    <p>
-    Group by:
-    <a href="?game={{game.id}}&amp;grouper=gametype">Gametype</a>,
-    <a href="?game={{game.id}}&amp;grouper=map">Map</a>,
-    <a href="?game={{game.id}}&amp;grouper=competition">Competition</a>
+    <p id="stats_view_all">
+    <a {% if grouper == 'competition' %}class='selected_view'{% endif %} 
+    href="{{ url_for('teams.stats', team_id=team.id, game=game.id, 
+    grouper='competition') }}">View All Competitions</a> /
+    <a {% if grouper == 'gametype' %}class='selected_view'{% endif %} 
+    href="{{ url_for('teams.stats', team_id=team.id, game=game.id,
+    grouper='gametype') }}">View All Game Types</a> /
+    <a {% if grouper == 'map' %}class='selected_view'{% endif %} 
+    href="{{ url_for('teams.stats', team_id=team.id, game=game.id,
+    grouper='map') }}">View All Maps</a>
     </p>
 
-    <h3>Total Stats
+    <form method='get' 
+    action="{{url_for('teams.combined_stats', team_id=team.id)}}">
+    Combine options:
+
+    {% for field in combine_form if field.type != 'HiddenField' -%}
+        {{ field }}
+    {% endfor -%}
+
+    <input type="submit" value="Go"/>
+    </form>
+
+    <h3>
+    {%- if stats|count -%}
+        Total Stats
+    {%- else -%}
+        {{ [competition.abbr, gametype.name, map.name]|join_none(', ') }}
+    {%- endif %}
         (Team Record:
         {{ total_wins }}-{{ total_losses }}
         {%- if total_draws -%}
@@ -84,7 +105,7 @@ $(document).ready(function(){
         {%- endif -%})
     </h3>
 
-    {{ stats_header(total_stats, phash, true) }}
+    {{ stats_header(total_stats, phash, stats|count > 0) }}
 
     {% for group in stats|groupby('grouper') %}
         <h3>{{ ghash[group.grouper] }}

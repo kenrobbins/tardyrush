@@ -137,3 +137,7 @@ def matches_datetime_format_for_team(value, tz):
             locale='en_US',
             tzinfo=pytz.timezone(tz))
 
+@app.template_filter()
+def join_none(val, d=u''):
+    return d.join(v for v in val if v)
+
