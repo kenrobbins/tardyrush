@@ -2,6 +2,7 @@ from tardyrush import db
 
 from fields import StrippedTextField
 from validators import Unique
+from datetime import datetime
 
 from pytz import common_timezones
 
