@@ -2,6 +2,7 @@ import datetime
 import collections
 
 from flask import Module, g, flash, url_for, request
+from flaskext.wtf import ValidationError
 from tardyrush import db
 from tardyrush.views import require_login
 from tardyrush.helpers import rt, jsonify, abs_url_for, redirect
