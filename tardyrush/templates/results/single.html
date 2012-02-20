@@ -95,6 +95,7 @@ $(document).ready(function(){
     <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
     <th>Offensive<br/>Objectives</th>
     <th>Defensive<br/>Objectives</th>
+    <th>Score</th>
     </tr>
     </thead>
     <tbody>
@@ -106,6 +107,7 @@ $(document).ready(function(){
         <td>{{ "%.2f"|kdr(kills[uid], deaths[uid])|safe }}</td>
         <td>{{ off_objs[uid] }}</td>
         <td>{{ def_objs[uid] }}</td>
+        <td>{{ score[uid] }}</td>
         </tr>
     {% endfor %}
     </tbody>
@@ -149,6 +151,7 @@ $(document).ready(function(){
         <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
         <th>Offensive<br/>Objectives</th>
         <th>Defensive<br/>Objectives</th>
+        <th>Score</th>
         </tr>
         </thead>
         <tbody>
@@ -160,6 +163,7 @@ $(document).ready(function(){
             <td>{{ "%.2f"|kdr(p.kills, p.deaths)|safe }}</td>
             <td>{{ p.off_objs }}</td>
             <td>{{ p.def_objs }}</td>
+            <td>{{ p.score }}</td>
             </tr>
         {% endfor %}
         </tbody>

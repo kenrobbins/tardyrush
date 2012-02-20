@@ -105,6 +105,7 @@ class CompletedMatchPlayer(db.Model):
             nullable=False)
     def_objs = db.Column('defensive_objectives', db.Integer(unsigned=True),
             nullable=False)
+    score = db.Column('score', db.Integer(unsigned=False), nullable=False)
 
     user = db.relation("User")
   
@@ -121,7 +122,7 @@ class CompletedMatchPlayerForm(Form):
             validators=[NumberRange(min=0)])
     def_objs = IntegerField(u'Defensive Objectives', default=0,
             validators=[NumberRange(min=0)])
-
+    score = IntegerField(u'Score', default=0)
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('csrf_enabled', False)

@@ -31,9 +31,19 @@ $(document).ready(function(){
     <th>Kills</th>
     <th>Deaths</th>
     <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
-    <th>Offensive<br/>Objectives</th>
-    <th>Defensive<br/>Objectives</th>
-    {%- if not is_total -%}
+    {%- if game.uses_stats_column('offobjs') -%}
+        <th>Offensive<br/>Objectives</th>
+    {%- endif -%}
+    {%- if game.uses_stats_column('defobjs') -%}
+        <th>Defensive<br/>Objectives</th>
+    {%- endif -%}
+    {%- if game.uses_stats_column('score') -%}
+        <th>Score</th>
+    {%- endif -%}
+    {%- if game.uses_stats_column('score_per_match') -%}
+        <th>Score<br/>Per Match</th>
+    {%- endif -%}
+    {%- if game.uses_stats_column('team_score') and not is_total -%}
         <th>Team<br/>Score</th>
     {%- endif -%}
     </tr>
@@ -50,9 +60,19 @@ $(document).ready(function(){
             <td>{{ s.kills }}</td>
             <td>{{ s.deaths }}</td>
             <td>{{ "%.2f"|kdr(s.kills, s.deaths)|safe }}</td>
-            <td>{{ s.offobjs }}</td>
-            <td>{{ s.defobjs }}</td>
-            {%- if not is_total -%}
+            {%- if game.uses_stats_column('offobjs') -%}
+                <td>{{ s.offobjs }}</td>
+            {%- endif -%}
+            {%- if game.uses_stats_column('defobjs') -%}
+                <td>{{ s.defobjs }}</td>
+            {%- endif -%}
+            {%- if game.uses_stats_column('score') -%}
+                <td>{{ s.score }}</td>
+            {%- endif -%}
+            {%- if game.uses_stats_column('score_per_match') -%}
+                <td>{{ "%d"|format(s.score / (s.wins+s.losses)) }}</td>
+            {%- endif -%}
+            {%- if game.uses_stats_column('team_score') and not is_total -%}
                 <td>{{ "%.2f"|format(s.team_score) }}</td>
             {% endif %}
             </tr>
@@ -83,6 +103,7 @@ $(document).ready(function(){
 
     <form method='get' 
     action="{{url_for('teams.combined_stats', team_id=team.id)}}">
+    <input type="hidden" name="game" value="{{game.id}}"/>
     Combine options:
 
     {% for field in combine_form if field.type != 'HiddenField' -%}

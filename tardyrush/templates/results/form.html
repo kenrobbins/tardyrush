@@ -110,8 +110,10 @@ function add_results_player(round) {
         player + "-off_objs' value='0' /></td>";
     var de = "<td><input type='text' size='4' name='rounds-" + round + "-players-" + 
         player + "-def_objs' value='0' /></td>";
+    var s = "<td><input type='text' size='4' name='rounds-" + round + "-players-" + 
+        player + "-score' value='0' /></td>";
 
-    var row = "<tr>" + p + k + d + oo + de + "</tr>" 
+    var row = "<tr>" + p + k + d + oo + de + s + "</tr>" 
 
     $('#round_players_table_' + round).append(row);
 }
@@ -176,6 +178,7 @@ function add_results_round() {
     rhtml += '<th>Deaths</th>';
     rhtml += '<th>Offensive<br/>Objectives</th>';
     rhtml += '<th>Defensive<br/>Objectives</th>';
+    rhtml += '<th>Score</th>';
     rhtml += '</tr>';
     rhtml += '</tbody>';
     
@@ -301,6 +304,7 @@ function add_results_round() {
             <th>Deaths</th>
             <th>Offensive<br/>Objectives</th>
             <th>Defensive<br/>Objectives</th>
+            <th>Score</th>
             </tr>
             
             {% for fp in f.players %}
@@ -310,6 +314,7 @@ function add_results_round() {
                 <td>{{ fp.deaths }}</td>
                 <td>{{ fp.off_objs }}</td>
                 <td>{{ fp.def_objs }}</td>
+                <td>{{ fp.score }}</td>
                 </tr>
             {%- endfor -%}
             </tbody>

@@ -17,10 +17,10 @@ def get_timezone():
 @app.before_request
 def lookup_current_user():
     g.user = None
-    if 'openid' in session:
-        g.user = User.query.filter_by(openid=session['openid']).first()
-    elif app.debug and 'force_login' in session:
+    if app.debug and 'force_login' in session:
         g.user = User.query.filter_by(name=session['force_login']).first()
+    elif 'openid' in session:
+        g.user = User.query.filter_by(openid=session['openid']).first()
 
     g.team_leader_teams = []
     g.founder_teams = []

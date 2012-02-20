@@ -24,10 +24,17 @@ class Game(db.Model):
     __tablename__ = 'games'
     id = create_id_column('game')
     name = create_name_column('game')
-    abbr = db.Column('abbreviation', db.String(255), nullable=False, unique=True)
-    thumbnail_url = db.Column('thumbnail_column', db.String(255), nullable=False)
+    abbr = db.Column('abbreviation', db.String(255), nullable=False, 
+                     unique=True)
+    thumbnail_url = db.Column('thumbnail_column', db.String(255),
+                              nullable=True)
     server_copy_format = db.Column('server_copy_format', db.String(255),
-            nullable=True)
+                                   nullable=True)
+    stats_columns = db.Column('stats_columns', db.String(255), nullable=True)
+
+    def uses_stats_column(self, column):
+        cols = self.stats_columns.split(',')
+        return column in cols
 
 class GameType(db.Model):
     __tablename__ = 'gametypes'

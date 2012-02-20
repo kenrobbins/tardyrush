@@ -405,16 +405,18 @@ def stats(team_id=0):
     # id, so get the competition ids from the game id.
     game_id = request.values.get('game') or 1
 
-    game = db.session.query(Game.id, Game.name).filter_by(id=game_id).one()
-
+    game = db.session.query(Game).filter_by(id=game_id).one()
     competitions = db.session.query(Competition.id,
                                     Competition.abbr,
                                     Competition.name).\
             filter_by(game_id=game_id).order_by(Competition.abbr).all()
     gametypes = db.session.query(GameType.id, GameType.name).\
+            filter_by(game_id=game_id).\
             order_by(GameType.name).\
             all()
-    maps = db.session.query(Map.id, Map.name).order_by(Map.name).all()
+    maps = db.session.query(Map.id, Map.name).\
+            filter_by(game_id=game_id).\
+            order_by(Map.name).all()
 
     competition_ids = [ c.id for c in competitions ]
 
@@ -513,6 +515,7 @@ def stats(team_id=0):
                                  db.func.sum(CompletedMatchPlayer.deaths),
                                  db.func.sum(CompletedMatchPlayer.off_objs),
                                  db.func.sum(CompletedMatchPlayer.def_objs),
+                                 db.func.sum(CompletedMatchPlayer.score),
                   db.func.count(db.func.distinct(CompletedMatch.id))).\
             join((CompletedMatch, 
                   CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
@@ -539,6 +542,7 @@ def stats(team_id=0):
                        'deaths' : s[2],
                        'offobjs' : s[3],
                        'defobjs' : s[4],
+                       'score' : s[5],
                        'team_score' : ts,
                        'wins' : w,
                        'losses' : l,
@@ -636,6 +640,7 @@ def stats(team_id=0):
                                  db.func.sum(CompletedMatchPlayer.deaths),
                                  db.func.sum(CompletedMatchPlayer.off_objs),
                                  db.func.sum(CompletedMatchPlayer.def_objs),
+                                 db.func.sum(CompletedMatchPlayer.score),
                   db.func.count(db.func.distinct(CompletedMatch.id))).\
             join((CompletedMatch, 
                   CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
@@ -670,6 +675,7 @@ def stats(team_id=0):
                        'deaths' : s[3],
                        'offobjs' : s[4],
                        'defobjs' : s[5],
+                       'score' : s[6],
                        'team_score' : ts,
                        'wins' : w,
                        'losses' : l,
@@ -764,7 +770,7 @@ def combined_stats(team_id=0):
 
     game_id = request.values.get('game') or 1
 
-    game = db.session.query(Game.id, Game.name).filter_by(id=game_id).one()
+    game = db.session.query(Game).filter_by(id=game_id).one()
 
     competitions = db.session.query(Competition.id, Competition.name).\
             filter_by(game_id=game_id).all()
@@ -905,6 +911,7 @@ def combined_stats(team_id=0):
                                  db.func.sum(CompletedMatchPlayer.deaths),
                                  db.func.sum(CompletedMatchPlayer.off_objs),
                                  db.func.sum(CompletedMatchPlayer.def_objs),
+                                 db.func.sum(CompletedMatchPlayer.score),
                   db.func.count(db.func.distinct(CompletedMatch.id))).\
             join((CompletedMatch, 
                   CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
@@ -949,6 +956,7 @@ def combined_stats(team_id=0):
                        'deaths' : s[2],
                        'offobjs' : s[3],
                        'defobjs' : s[4],
+                       'score' : s[5],
                        'team_score' : ts,
                        'wins' : w,
                        'losses' : l,

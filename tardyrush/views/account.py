@@ -56,10 +56,14 @@ def force_login(username):
             flash(u'Logged in as %s' % username)
             session['force_login'] = username
             g.user = user
+        return redirect(url_for('create_profile'))
     return redirect(url_for('.index'))
 
 @account.route('/create_profile/', methods=('GET', 'POST'))
 def create_profile():
+    if app.debug and 'openid' not in session:
+        session['openid'] = 'test'
+
     if g.user is not None or 'openid' not in session:
         return redirect(url_for('.index'))
 

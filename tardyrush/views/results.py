@@ -239,7 +239,8 @@ def add(cmatch_id, action):
                                                   kills=p.kills.data,
                                                   deaths=p.deaths.data,
                                                   off_objs=p.off_objs.data,
-                                                  def_objs=p.def_objs.data)
+                                                  def_objs=p.def_objs.data,
+                                                  score=p.score.data)
                     rnd.players.append(player)
 
                 if error:
@@ -290,6 +291,7 @@ def show(cmatch_id):
     deaths = collections.defaultdict(int)
     off_objs = collections.defaultdict(int)
     def_objs = collections.defaultdict(int)
+    score = collections.defaultdict(int)
     for r in cmatch.rounds:
         for p in r.players:
             kills[p.user_id] += p.kills
@@ -297,6 +299,7 @@ def show(cmatch_id):
             players[p.user_id] = p.user.name
             off_objs[p.user_id] += p.off_objs
             def_objs[p.user_id] += p.def_objs
+            score[p.user_id] += p.score
 
     return rt('results/single.html', 
             page=page,
@@ -305,5 +308,6 @@ def show(cmatch_id):
             deaths=deaths,
             off_objs=off_objs,
             def_objs=def_objs,
+            score=score,
             cmatch=cmatch)
 
