@@ -2,7 +2,7 @@ import datetime
 import collections
 
 from flask import Module, g, flash, url_for, request
-from flaskext.wtf import ValidationError
+from flask.ext.wtf import ValidationError
 from tardyrush import db
 from tardyrush.views import require_login
 from tardyrush.helpers import rt, jsonify, abs_url_for, redirect
@@ -158,9 +158,6 @@ def show(team_id=-1, action=''):
             else:
                 form = TeamForm(ImmutableMultiDict(), obj=team)
                 players_form = TeamPlayersForm(request.form, obj=team)
-
-            # make sure form has the latest csrf value
-            form.csrf.data = players_form.csrf.data
 
             form.name.validators[0].values = team_names
 

@@ -13,6 +13,8 @@ from tardyrush.models import MatchPlayer, CompletedMatch, TeamPlayer, \
         ForumBot
 from teams import *
 
+from flask.ext.wtf import HiddenField
+
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
 
 @app.template_filter('nl2br')
@@ -141,3 +143,6 @@ def matches_datetime_format_for_team(value, tz):
 def join_none(val, d=u''):
     return d.join(v for v in val if v)
 
+@app.template_filter()
+def is_hidden_field(field):
+    return isinstance(field, HiddenField) #or \ isinstance(field, HiddenIntegerField)

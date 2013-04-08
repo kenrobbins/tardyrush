@@ -10,9 +10,9 @@
         <p>Uh oh! Please fix the errors below and try again.</p>
     {% endif %}
 
-  <form action="" method=post>
+    <form action="" method=post>
     {{ form.hidden_tag() }}
-    {% for field in form if field.type != 'HiddenField' -%}
+    {% for field in form if not field|is_hidden_field -%}
         {% if field.type != 'FieldList' -%}
             <p>
             {{ field.label }}<br/>
@@ -36,7 +36,7 @@
     <form action="" method=post>
     <input type="hidden" name="edit_players" value="1" />
     {{ players_form.hidden_tag() }}
-    {% for field in players_form if field.type != 'HiddenField' -%}
+    {% for field in players_form if not field|is_hidden_field -%}
         {% if field.type == 'FieldList' %}
             <h2>Edit Players</h2>
             <table>

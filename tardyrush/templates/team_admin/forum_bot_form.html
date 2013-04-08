@@ -20,7 +20,7 @@
   <form action="" method="post">
     {{ form.hidden_tag() }}
 
-    {% for field in form if field.type != 'HiddenField' -%}
+    {% for field in form if not field|is_hidden_field -%}
         {% if field.type != 'FieldList' -%}
             <p>
             {{ field.label }}

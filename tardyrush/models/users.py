@@ -6,7 +6,7 @@ from datetime import datetime
 
 from pytz import common_timezones
 
-from flaskext.wtf import Form, TextField, IntegerField, DateTimeField, \
+from flask.ext.wtf import Form, TextField, IntegerField, DateTimeField, \
         TextAreaField, HiddenField, SelectField, FormField, FieldList, \
         BooleanField, Length, NumberRange, Optional, Required
 
@@ -27,8 +27,7 @@ class User(db.Model):
             nullable=False, server_default='0')
     date_joined = db.Column('date_joined', db.DateTime, nullable=False)
 
-    teams = db.relation("TeamPlayer",
-            cascade="delete")
+    teams = db.relation("TeamPlayer", cascade="delete")
 
     # email settings
     EmailNone = 1

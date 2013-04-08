@@ -3,10 +3,10 @@ import logging
 from logging import Formatter
 
 from flask import Flask
-from flaskext.sqlalchemy import SQLAlchemy
-from flaskext.openid import OpenID
-from flaskext.mail import Mail
 from flaskext.babel import Babel
+from flask.ext.sqlalchemy import SQLAlchemy
+from flask_mail import Mail
+from flask_openid import OpenID
 
 from tardyrush.helpers.consts import *
 

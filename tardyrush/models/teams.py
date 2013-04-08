@@ -1,6 +1,6 @@
 from tardyrush import db
 
-from flaskext.wtf import Form, TextField, IntegerField, DateTimeField, \
+from flask.ext.wtf import Form, TextField, IntegerField, DateTimeField, \
         TextAreaField, HiddenField, SelectField, FormField, FieldList, \
         BooleanField, Length, NumberRange, Optional, Required, widgets, \
         ValidationError
@@ -20,24 +20,22 @@ class Team(db.Model):
     url = db.Column('url', db.String(255), nullable=True)
     join_password = db.Column('join_password', db.String(255), nullable=False)
     time_zone = db.Column('time_zone', db.String(255), nullable=False,
-            server_default='US/Eastern')
+                          server_default='US/Eastern')
     date_created = db.Column('date_created', db.DateTime, nullable=False)
 
     players = db.relation('TeamPlayer',
-            order_by='TeamPlayer.status.asc()',
-            lazy='dynamic', cascade="delete")
+                          order_by='TeamPlayer.status.asc()',
+                          lazy='dynamic',
+                          cascade="delete")
     matches = db.relation(Match,
-            primaryjoin=Match.team_id == id, cascade="delete")
-    opponents = db.relation('Opponent',
-            lazy='dynamic', cascade='delete')
-    servers = db.relation('Server', 
-            cascade='delete')
+                          primaryjoin=Match.team_id == id,
+                          cascade="delete")
+    opponents = db.relation('Opponent', lazy='dynamic', cascade='delete')
+    servers = db.relation('Server', cascade='delete')
 
-    posts = db.relation("ForumBotQueuedPost",
-            cascade="delete")
+    posts = db.relation("ForumBotQueuedPost", cascade="delete")
 
-    forum_bots = db.relation("ForumBot",
-            cascade="delete")
+    forum_bots = db.relation("ForumBot", cascade="delete")
 
 class TeamPlayer(db.Model):
     __tablename__ = 'team_players'

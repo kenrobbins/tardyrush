@@ -36,7 +36,7 @@ def add_server(team_id=0):
 
         if api:
             return jsonify(success=True, server_id=server.id,
-                    csrf=form.csrf.data,
+                    csrf=form.csrf_token.data,
                     server_name=server.name)
 
         if form.f.data == 'add_match':
@@ -122,7 +122,7 @@ def add_opponent(team_id=0):
 
         if api:
             return jsonify(success=True, opponent_id=opponent.id,
-                    csrf=form.csrf.data,
+                    csrf=form.csrf_token.data,
                     opponent_name=opponent.name)
 
         if form.f.data == 'add_match':

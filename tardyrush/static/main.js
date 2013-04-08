@@ -1,16 +1,16 @@
 function update_csrf(data) {
-    if (data.csrf) {
-        $('input[name=csrf]').val(data.csrf);
+    if (data.csrf_token) {
+        $('input[name=csrf_token]').val(data.csrf_token);
     }
 }
 
 function update_player_status(obj) {
     var form = $(obj).parent();
-    var csrf = form.find('input[name=csrf]').val();
+    var csrf = form.find('input[name=csrf_token]').val();
     var s = form.find('input[name=s]').val();
     var url = form.attr('action');
     $.post(url, {
-            csrf: csrf,
+            csrf_token: csrf,
             s: s,
             api: '1'
         }, function(data) {
@@ -76,10 +76,10 @@ function update_player_status(obj) {
 
 function save_form(type) {
     var form = $('#'+type+'_form');
-    var csrf = form.find('input[name=csrf]').val();
+    var csrf = form.find('input[name=csrf_token]').val();
 
     data = {
-        csrf: csrf,
+        csrf_token: csrf,
         api: '1'
     };
 

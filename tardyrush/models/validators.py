@@ -1,6 +1,6 @@
-from flaskext.wtf import ValidationError
 from datetime import datetime
 from flaskext.babel import to_utc
+from flask.ext.wtf import ValidationError
 
 class Unique(object):
     def __init__(self, ignore_case=True, values=set()):

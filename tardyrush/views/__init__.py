@@ -1,7 +1,7 @@
 import pytz
 
 from flask import g, session, url_for, flash
-from flaskext.mail import Message
+from flask_mail import Message
 
 from tardyrush import app, babel, oid, mail
 from tardyrush.helpers import rt, redirect

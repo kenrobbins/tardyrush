@@ -1,6 +1,6 @@
 from tardyrush import db
 
-from flaskext.wtf import Form, TextField, IntegerField, DateTimeField, \
+from flask.ext.wtf import Form, TextField, IntegerField, DateTimeField, \
         TextAreaField, HiddenField, SelectField, FormField, FieldList, \
         BooleanField, Length, NumberRange, Optional, Required
 
@@ -53,8 +53,7 @@ class CompletedMatch(db.Model):
     competition = db.relation("Competition")
     server = db.relation("Server")
 
-    avail_match = db.relation("Match", 
-            backref="results", lazy='dynamic')
+    avail_match = db.relation("Match", backref="results")
 
     rounds = db.relation("CompletedMatchRound",
             cascade="delete,delete-orphan,save-update,merge", lazy='dynamic')

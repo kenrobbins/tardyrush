@@ -112,7 +112,7 @@ def update_time_zone():
         user_tz_names = (format_datetime(now, 'zzzz'), format_datetime(now, 'zzz'))
 
         return jsonify(success=True, time_zone=form.time_zone.data,
-                csrf=form.csrf.data, user_tz_names=user_tz_names)
+                csrf=form.csrf_token.data, user_tz_names=user_tz_names)
 
     flash(u'There was an error updating your time zone.')
     return jsonify(success=False)

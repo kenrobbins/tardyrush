@@ -1,12 +1,12 @@
 {% extends "layout.html" %}
 {% import 'helpers/gcal.html' as gcal %}
 {% block head %}
-<link type="text/css" rel="stylesheet" href="/static/qtip2/jquery.qtip.min.css"/>
-<script type="text/javascript" src="/static/main.min.js"></script>
-<script type="text/javascript" src="/static/qtip2/jquery.qtip.min.js"></script>
-<script type="text/javascript" src="/static/zeroclipboard/ZeroClipboard.min.js"></script>
+<link type="text/css" rel="stylesheet" href="/static/qtip2/jquery.qtip.css"/>
+<script type="text/javascript" src="/static/main.js"></script>
+<script type="text/javascript" src="/static/qtip2/jquery.qtip.js"></script>
+<script type="text/javascript" src="/static/zeroclipboard/ZeroClipboard.js"></script>
 <script type="text/javascript">
-ZeroClipboard.setMoviePath( '{{url_for('static', filename='zeroclipboard/ZeroClipboard.swf',
+ZeroClipboard.setMoviePath( '{{url_for('.static', filename='zeroclipboard/ZeroClipboard.swf',
 _external=True)}}' );
 </script>
 <script type="text/javascript">
@@ -44,19 +44,19 @@ $(document).ready(function() {
         <div id="status_buttons_{{m.id}}" class="status_buttons">
         <form id="sb_available_{{m.id}}" method="post" action="{{
         url_for('matches.show', match_id=m.id, action='status') }}">
-        {{ aform.hidden_tag('csrf') }}
+        {{ aform.hidden_tag('csrf_token') }}
         {{ aform.s(value="available") }}
         <input onClick="return update_player_status(this)" type="submit" name="submit" value="Available" />
         </form>
         <form id="sb_maybe_{{m.id}}" method="post" action="{{
         url_for('matches.show', match_id=m.id, action='status') }}">
-        {{ aform.hidden_tag('csrf') }}
+        {{ aform.hidden_tag('csrf_token') }}
         {{ aform.s(value="maybe") }}
         <input onClick="return update_player_status(this)" type="submit" name="submit" value="Maybe" />
         </form>
         <form id="sb_unavailable_{{m.id}}" method="post" action="{{
         url_for('matches.show', match_id=m.id, action='status') }}">
-        {{ aform.hidden_tag('csrf') }}
+        {{ aform.hidden_tag('csrf_token') }}
         {{ aform.s(value="unavailable") }}
         <input onClick="return update_player_status(this)" type="submit" name="submit" value="Unavailable" />
         </form>
@@ -75,7 +75,7 @@ $(document).ready(function() {
         <a href="{{gcal.link(m)}}"
         title="Add this match to Google Calendar"
         target="_blank"><img
-        src="{{url_for('static', filename='googlecalendar.png')}}" /></a>
+        src="{{url_for('.static', filename='googlecalendar.png')}}" /></a>
 
         {%- if m.team.id|can_edit_match -%}
         <a title="Edit this match" class="edit_match" href="{{

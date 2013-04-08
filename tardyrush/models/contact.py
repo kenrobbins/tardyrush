@@ -1,4 +1,4 @@
-from flaskext.wtf import Form, TextAreaField, Length, Optional, Required, \
+from flask.ext.wtf import Form, TextAreaField, Length, Optional, Required, \
         RecaptchaField
 
 from fields import StrippedTextField

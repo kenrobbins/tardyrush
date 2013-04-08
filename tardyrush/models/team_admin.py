@@ -1,6 +1,6 @@
 from tardyrush import db
 
-from flaskext.wtf import Form, TextField, IntegerField, DateTimeField, \
+from flask.ext.wtf import Form, TextField, IntegerField, DateTimeField, \
         TextAreaField, HiddenField, SelectField, FormField, FieldList, \
         BooleanField, Length, NumberRange, Optional, Required
 

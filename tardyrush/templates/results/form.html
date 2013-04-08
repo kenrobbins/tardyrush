@@ -208,8 +208,7 @@ function add_results_round() {
         <p>Uh oh! Please fix the errors below and try again.</p>
     {% endif %}
 
-    {% for field in form if field.type != 'HiddenField' and field.type !=
-    'HiddenIntegerField' -%}
+    {% for field in form if not field|is_hidden_field -%}
         {% if field.type == 'FieldList' %}
 
         {% elif field.type != 'FieldList' %}

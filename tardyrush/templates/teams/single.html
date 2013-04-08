@@ -60,7 +60,7 @@
         <h2>Join Team</h2>
         <form action="{{url_for('show', team_id=team.id, action='join')}}" method="post">
             {{ join_form.hidden_tag() }}
-            {% for field in join_form if field.type != 'HiddenField' -%}
+            {% for field in join_form if not field|is_hidden_field -%}
                 <p>
                 {{ field.label }}<br/>
                 {% if field.errors %}
@@ -79,7 +79,7 @@
         <h2>Leave Team</h2>
         <form action="{{url_for('show', team_id=team.id, action='leave')}}" method="post">
             {{ leave_form.hidden_tag() }}
-            {% for field in leave_form if field.type != 'HiddenField' -%}
+            {% for field in leave_form if not field|is_hidden_field -%}
                 <p>
                 {{ field.label }}<br/>
                 {% if field.errors %}

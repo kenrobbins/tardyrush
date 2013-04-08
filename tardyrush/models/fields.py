@@ -1,9 +1,10 @@
 import time
 
 from inputs import *
-from flaskext.wtf import widgets, TextField, IntegerField, DateTimeField
+from flask.ext.wtf import widgets, TextField, IntegerField, DateTimeField,\
+        HiddenField
 
-class HiddenIntegerField(IntegerField):
+class HiddenIntegerField(IntegerField, HiddenField):
     widget = widgets.HiddenInput()
 
 class StrippedTextField(TextField):

@@ -5,7 +5,7 @@ from sqlalchemy.orm import eagerload, join, outerjoin
 from sqlalchemy.orm.exc import NoResultFound
 
 from flask import Module, g, request, flash, url_for
-from flaskext.mail import Message
+from flask_mail import Message
 from flaskext.babel import to_user_timezone, to_utc
 
 from tardyrush import db, mail
@@ -325,7 +325,7 @@ def show(match_id, action):
                 if request.values.get('api') == '1':
                     psp = pretty_match_player_status(player_status)
                     return jsonify(success=True,
-                            csrf=form.csrf.data,
+                            csrf=form.csrf_token.data,
                             match_id=match.id,
                             user_id=g.user.id,
                             user_name=g.user.name,

@@ -15,7 +15,7 @@ def rt(*args, **kwargs):
         csrf = None
         errors = []
         if 'form' in kwargs and kwargs['form']:
-            csrf = kwargs['form'].csrf.data
+            csrf = kwargs['form'].csrf_token.data
             errors = kwargs['form'].errors
 
         return jsonify(success=False, errors=errors, csrf=csrf)

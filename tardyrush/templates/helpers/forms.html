@@ -14,7 +14,8 @@
         <p>Uh oh! Please fix the errors below and try again.</p>
     {% endif %}
 
-    {% for field in form if field.type != 'HiddenField' -%}
+    {% for field in form if not field|is_hidden_field -%}
+        {{ field.type }}
         {% if field.type != 'FieldList' -%}
             {% if field.name == 'team_id' and field.choices|count == 1 %}
                 <input type="hidden" name="{{field.name}}" 
@@ -50,7 +51,7 @@
             <p>Uh oh! Please fix the errors below and try again.</p>
         {% endif %}
 
-        {% for field in form if field.type != 'HiddenField' -%}
+        {% for field in form if not field|is_hidden_field -%}
             <p>
             {{ field.label }}<br/>
             {% if field.errors -%}
@@ -83,7 +84,7 @@
         <p>Uh oh! Please fix the errors below and try again.</p>
     {% endif %}
 
-    {% for field in form if field.type != 'HiddenField' -%}
+    {% for field in form if not field|is_hidden_field -%}
         {% if field.type != 'FieldList' -%}
             {% if field.name == 'team_id' and field.choices|count == 1 %}
                 <input type="hidden" name="{{field.name}}" 
