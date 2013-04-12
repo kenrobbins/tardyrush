@@ -17,9 +17,6 @@
         {% if field.type != 'FieldList' -%}
             <p>
             {{ field.label }}
-            {% if field.name == 'steam_id' %}
-                <span class="label_extra">(e.g., STEAM_X:Y:Z)</span>
-            {%- endif -%}
             <br/>
             {% if field.errors -%}
                 <ul class="errors">

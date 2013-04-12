@@ -1,31 +1,30 @@
+from datetime import datetime
 from flask import Module, g, session, flash, request, url_for
 from flaskext.babel import refresh as babel_refresh, to_user_timezone
 from tardyrush import oid, app, db
 from tardyrush.views import require_login
-from tardyrush.helpers import rt, jsonify, abs_url_for, redirect
-from tardyrush.helpers.filters import *
-from tardyrush.helpers.teams import *
+from tardyrush.helpers import rt, jsonify, redirect
 from tardyrush.models import User, UserForm, UserSettingsForm, UserTimeZoneForm
 
-from datetime import datetime
 
 account = Module(__name__)
+
 
 @oid.after_login
 def create_or_login(resp):
     session['openid'] = resp.identity_url
     session.permanent = True
+
     user = User.query.filter_by(openid=resp.identity_url).first()
     if user is not None:
         flash(u'You were successfully signed in.')
         g.user = user
         return redirect(oid.get_next_url())
-    return redirect(url_for('create_profile', next=oid.get_next_url(),
-                            name=resp.nickname, email=resp.email))
 
-@account.route('/login/')
-def login():
-    return redirect(url_for('signin'))
+    return redirect(url_for('create_profile',
+                            next=oid.get_next_url(),
+                            name=resp.nickname,
+                            email=resp.email))
 
 @account.route('/signin/', defaults={'t':''}, methods=('GET', 'POST'))
 @account.route('/signin/<t>/', methods=('GET', 'POST'))
@@ -33,6 +32,7 @@ def login():
 def signin(t):
     if g.user is not None:
         return redirect(oid.get_next_url())
+
     if request.method == 'POST':
         if app.debug:
             openid = request.form.get('openid')
@@ -121,26 +121,17 @@ def update_time_zone():
 @require_login()
 def settings():
     emails = set()
-    #steam_ids = set()
     for u in User.query.all():
         if u.email is not None:
             emails.add(u.email.lower())
-        #if u.steam_id is not None:
-        #    steam_ids.add(u.steam_id.lower())
 
     if g.user.email is not None:
         email_lower = g.user.email.lower()
         if email_lower in emails:
             emails.remove(email_lower)
 
-    #if g.user.steam_id is not None:
-    #    steam_id_lower = g.user.steam_id.lower() 
-    #    if steam_id_lower in steam_ids:
-    #        steam_ids.remove(steam_id_lower)
-
     form = UserSettingsForm(request.form, obj=g.user)
     form.email.validators[0].values = emails
-    #form.steam_id.validators[0].values = steam_ids
 
     if form.validate_on_submit():
         form.populate_obj(g.user)

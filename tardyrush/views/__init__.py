@@ -59,7 +59,6 @@ def require_login(url='signin', page=None):
 @app.route('/')
 def index():
     if g.user:
-        #TODO make this not redirect, but show the same content
         return redirect(url_for('matches.my_matches'))
 
     return rt('splash.html')
@@ -78,12 +77,10 @@ def contact():
                           "tardyrush@tardyrush.com"))
 
         mail.send(msg)
-        
-        flash(u"Your comments have been sent.  Thanks.")
+
+        flash(u"Your comments have been sent. Thanks.")
         sent = True
 
-    return rt("contact.html", 
+    return rt("contact.html",
             page={'top':'contact', 'sub':''},
             form=form, sent=sent)
-
-

@@ -190,7 +190,7 @@ def index(team_id=0):
     if not team_id or not is_team_leader(team_id):
         flash(u'You must be a team leader to administrate the team.')
         return redirect(url_for('teams.my_teams'))
-    
+
     opponents = Opponent.query.\
             filter_by(team_id=team_id).\
             order_by(Opponent.name.asc()).\
@@ -212,7 +212,7 @@ def index(team_id=0):
             opponents=opponents,
             servers=servers,
             forum_bots=forum_bots)
-    
+
 @team_admin.route('/team/<int:team_id>/forum_bots/add/', methods=('GET','POST'))
 @require_login()
 def add_forum_bot(team_id=0):
