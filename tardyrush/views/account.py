@@ -55,7 +55,7 @@ def force_login(username):
     if app.debug:
         user = User.query.filter_by(name=username).first()
         if user is not None:
-            flash(u'Logged in as %s' % username, 'success')
+            flash(u'You are now logged in as %s.' % username, 'success')
             session['force_login'] = username
             g.user = user
         return redirect(url_for('create_profile'))
