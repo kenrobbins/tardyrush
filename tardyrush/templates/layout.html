@@ -24,7 +24,7 @@
                     <div class="nav-collapse collapse">
                         <ul class="nav">
                             <li {% if page.top in ('matches', 'my_matches') %}class="active"{%endif%}>
-                                <a href="{{ url_for('matches.all') }}">Matches</a></li>
+                                <a href="{{ url_for('matches.my_matches') }}">Matches</a></li>
                             <li {% if page.top in ('teams', 'my_teams', 'team') %}class="active"{% endif %}>
                                 <a href="{{ url_for('teams.all') }}">Teams</a></li>
                             <li {% if page.top == 'contact' %}class="active"{%endif%}>
