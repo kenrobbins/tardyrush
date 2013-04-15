@@ -20,7 +20,7 @@ from tardyrush.models import \
         Team, TeamPlayer, MatchPlayerStatusForm, Competition, \
         Opponent, OpponentForm, ServerForm, \
         MatchPlayer, Match, Server, MatchForm, AddMatchForm, \
-        User, ForumBotQueuedPost, UserTimeZoneForm
+        User, ForumBotQueuedPost, UserTimeZoneForm, CompletedMatch
 
 matches = Module(__name__)
 
