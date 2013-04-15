@@ -1,10 +1,13 @@
 {% extends "layout.html" %}
-{% block body %}
-  <h2>{%- if adding %}Add{%-else%}Edit{%-endif%} Forum Helper</h2>
 
-    {% if form.errors %}
-        <p>Uh oh! Please fix the errors below and try again.</p>
-    {% endif %}
+{% block title %}
+{%- if adding %}Add{%-else%}Edit{%-endif%} Forum Helper
+{% endblock %}
+
+{% block body %}
+<div class="page-header">
+    <h1>{{team.name}} <small>{%- if adding %}Add{%-else%}Edit{%-endif%} Forum Helper</small></h1>
+</div>
 
     <p>
     A forum helper posts a message to your forum so
@@ -17,42 +20,45 @@
     sure your user has appropriate permissions to post to the forum specified.
     </p>
 
-  <form action="" method="post">
-    {{ form.hidden_tag() }}
 
-    {% for field in form if not field|is_hidden_field -%}
-        {% if field.type != 'FieldList' -%}
-            <p>
-            {{ field.label }}
-            {% if field.name == 'url' %}
-            <span>(e.g., http://forums.raraavises.net &mdash; do not
-            include a trailing file name like index.php)</span>
-            {% endif %}
-            <br/>
-            {% if field.errors -%}
-                <ul class="errors">
-                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
-                </ul>
-            {% endif -%}
-            {{ field }}
-            </p>
-        {% endif -%}
-    {% endfor -%}
+    <form action="" method="post">
+        <fieldset>
+            {{ form.hidden_tag() }}
+            {% for field in form if not field|is_hidden_field -%}
+                {% if field.type != 'FieldList' -%}
+                    <div class="control-group {% if field.errors -%} error{%-endif-%}">
+                        {{ field.label(class="control-label") }}
+                        <div class="controls">
+                            {{ field(class='span5') }}
+                            {% if field.errors|length > 1 -%}
+                                <ul class="help-block">
+                                    {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                                </ul>
+                            {% elif field.errors|length == 1 -%}
+                                <span class="help-inline">{{field.errors[0]}}</span>
+                            {% endif -%}
+                            {% if field.name == 'url' %}
+                                <span class="help-block">
+                                    (e.g., http://forums.raraavises.net &mdash; do not
+                                    include a trailing file name like index.php)
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif -%}
+            {% endfor -%}
 
-    <p>
-      <input type="submit" name="submit"
-        value="{%- if adding %}Add Forum Helper{% else %}Save Forum Helper{% endif %}"/>
-    </p>
-  </form>
+            <button type="submit" class="btn btn-primary"/>
+                {%- if adding %}Add Forum Helper{% else %}Save Forum Helper{% endif %}
+            </button>
+        </fieldset>
+    </form>
 
     {% if forum_bot_id %}
-    <h2>Delete Forum Helper</h2>
-    <form method="post" action="{{url_for('forum_bot', team_id=team.id,
-    forum_bot_id=forum_bot_id, action='delete')}}">
-    <p>
-        <input type="submit" name="submit" value="Delete Forum Helper"/>
-    </p>
-    </form>
+        <h2>Delete Forum Helper</h2>
+        <form method="post" action="{{url_for('forum_bot', team_id=team.id, forum_bot_id=forum_bot_id, action='delete')}}">
+            <button type="submit" class="btn btn-danger">Delete Forum Helper</button>
+        </form>
     {% endif %}
 {% endblock %}
 

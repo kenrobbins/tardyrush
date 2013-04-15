@@ -16,7 +16,7 @@ class StrippedTextField(TextField):
         self.data = self.data.strip() or None
 
 class MatchDateTimeField(DateTimeField):
-    widget = MatchDateTimeInput()
+    widget = MatchDateTimeWidget()
 
     def __init__(self, *args, **kwargs):
         super(MatchDateTimeField, self).__init__(*args, **kwargs)

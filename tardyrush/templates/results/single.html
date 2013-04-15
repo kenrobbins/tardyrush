@@ -20,19 +20,33 @@ $(document).ready(function(){
 </script>
 {% endblock %}
 
+{% block title %}
+{{cmatch.team.name}} vs. {{cmatch.opponent.name}}
+{% endblock %}
+
 {% block body %}
-    <h2>{{cmatch.team.name}} vs. {{cmatch.opponent.name}}
-    {% if cmatch.team.id|can_edit_match %}
-    <a class="header_link" 
-    href="{{ url_for('results.add', action='edit',cmatch_id=cmatch.id,
-    from='single')}}"
-    ><img src="/static/pencil.png"/></a>
+
+<div class="page-header">
+    <h1>
+        {{cmatch.team.name}} vs. {{cmatch.opponent.name}}
+    {% if g.user.can_edit_match(cmatch.team.id) %}
+        <small>
+            <a href="{{ url_for('results.add', action='edit',cmatch_id=cmatch.id, from='single')}}"
+                class="btn btn-mini"><i class="icon-edit"></i> Edit Result</a>
+            </a>
+        </small>
     {%- endif -%}
-    </h2>
+    </h1>
+</div>
 
-    <h3>{{ cmatch.date_played|matches_datetime_format_full }}</h3>
 
-    <table id="single_match_details">
+    <table class="table">
+        <thead>
+    <tr>
+        <th>Played On</th><td>{{ cmatch.date_played|matches_datetime_format_full }}</td>
+    </tr>
+        </thead>
+        <tbody>
     <tr>
         <th>Posted By</th><td>{{ cmatch.user.name }}</td>
     </tr>
@@ -49,7 +63,7 @@ $(document).ready(function(){
         <tr><th>Result</th>
         <td>
         {% set f = '' %}
-        {% if cmatch.final_result_method|is_forfeit %}
+        {% if cmatch.is_forfeit %}
             {% set f = 'Forfeit ' %}
         {% endif %}
         {% if cmatch.wins > cmatch.losses %}
@@ -59,8 +73,8 @@ $(document).ready(function(){
         {% else %}
             <strong class="res_draw">Draw</strong>
         {% endif %}
-        {% if not cmatch.final_result_method|is_forfeit %}
-            ({{ cmatch.wins }} - 
+        {% if not cmatch.is_forfeit %}
+            ({{ cmatch.wins }} -
             {{ cmatch.losses }}
             {%- if cmatch.draws %}
                 - {{ cmatch.draws }}
@@ -68,31 +82,29 @@ $(document).ready(function(){
         {%- endif -%}
         </td></tr>
     {%- endif -%}
+        </tbody>
     </table>
 
-    <div class="grid_7 suffix_5 alpha omega">
-
     {%- if cmatch.comments|trim|length -%}
-    <div id="single_match_comments">
+    <div class="well well-small">
         <h4>Comments</h4>
         {{cmatch.comments|trim|nl2br|replace("<p>"|safe, "<p class='first'>"|safe, 1)}}
     </div>
     {%- endif -%}
-    </div>
 
     {% if players|count %}
 
     <h2>Stats</h2>
 
     <h3>Overall</h3>
-   
-    <table class="match_round_stats">
+
+    <table class="table table-condensed table-striped match_round_stats">
     <thead>
     <tr>
     <th>Player</th>
     <th>Kills</th>
     <th>Deaths</th>
-    <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
+    <th><abbr class="initialism" title="Kill to Death Ratio">KDR</abbr></th>
     <th>Offensive<br/>Objectives</th>
     <th>Defensive<br/>Objectives</th>
     <th>Score</th>
@@ -116,13 +128,16 @@ $(document).ready(function(){
     {% set rnum = 1 %}
     {% for r in cmatch.rounds %}
         <h3>Round {{ rnum }}</h3>
-        <table class="round_result">
+        <table class="table table-condensed round_result">
+            <thead>
         <tr>
         <th>Result</th>
         <th>Map</th>
         <th>Side</th>
         <th>Gametype</th>
         </tr>
+            </thead>
+            <tbody>
         <tr>
         <td>
         {% if r.wins > r.losses %}
@@ -132,7 +147,7 @@ $(document).ready(function(){
         {% else %}
             <strong class="res_draw">Draw</strong>
         {% endif %}
-        ({{ r.wins }} - 
+        ({{ r.wins }} -
         {{ r.losses }}
         {%- if r.draws %}
             - {{ r.draws }}
@@ -140,15 +155,16 @@ $(document).ready(function(){
         <td>{{ r.map.name }}</td>
         <td>{{ r.side.name }}</td>
         <td>{{r.gametype.name}}</td>
+            </tbody>
         </table>
 
-        <table class="match_round_stats">
+        <table class="table table-condensed table-striped match_round_stats">
         <thead>
         <tr>
         <th>Player</th>
         <th>Kills</th>
         <th>Deaths</th>
-        <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
+        <th><abbr class="initialism" title="Kill to Death Ratio">KDR</abbr></th>
         <th>Offensive<br/>Objectives</th>
         <th>Defensive<br/>Objectives</th>
         <th>Score</th>

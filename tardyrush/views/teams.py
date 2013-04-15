@@ -8,8 +8,7 @@ from tardyrush.views import require_login
 from tardyrush.helpers import rt, jsonify, abs_url_for, redirect
 from tardyrush.helpers.filters import *
 from tardyrush.helpers.consts import *
-from tardyrush.helpers.teams import is_founder, is_team_leader, \
-        is_on_current_team, grouper_id_to_int
+from tardyrush.helpers.teams import grouper_id_to_int
 from tardyrush.models import \
         Team, TeamForm, TeamPlayersForm, LeaveTeamForm, JoinTeamForm, \
         CompletedMatch, CompletedMatchPlayer, CompletedMatchRound, \
@@ -22,19 +21,23 @@ from werkzeug.datastructures import ImmutableMultiDict
 teams = Module(__name__)
 
 @teams.route('/team/all/')
-@teams.route('/teams/all/')
 def all():
+    if g.user.is_on_team():
+        team_id = g.user.one_team.id
+        team = Team(id=team_id)
+    else:
+        team = None
+
     return rt('teams/table.html',
             page={'top':'teams', 'sub':'all_teams'},
             all_teams=True,
+            team=team,
             teams=Team.query.order_by(Team.name.asc()).all())
 
 # show teams the current user is on
 @teams.route('/team/')
-@teams.route('/my_teams/')
-@teams.route('/teams/')
 def my_teams():
-    if len(g.teams):
+    if g.user.is_on_team():
         return show()
 
     return redirect(url_for('all'))
@@ -46,20 +49,20 @@ def show(team_id=-1, action=''):
     page = { 'top' : 'team', 'sub' : 'main' }
 
     if team_id and type(team_id) == int:
-        if team_id == -1 and len(g.teams) == 1:
-            team_id = g.teams.keys()[0]
-            page = {'top':'my_teams', 'sub':'all_my'}
-        elif team_id in g.teams:
-            page = {'top':'my_teams', 'sub':'all_my'}
- 
         if team_id == -1:
-            if g.user:
+            team_id = g.user.one_team.id
+            page = {'top':'my_teams', 'sub':'all_my'}
+        elif g.user.is_on_team(team_id):
+            page = {'top':'my_teams', 'sub':'all_my'}
+
+        if team_id == -1:
+            if not g.user.is_guest:
                 team_players = TeamPlayer.query.options(eagerload('team')).\
                         filter_by(user_id=g.user.id).\
                         order_by(TeamPlayer.status.asc()).\
                         all()
                 teams = [ t.team for t in team_players ]
-                return rt('teams/table.html', 
+                return rt('teams/table.html',
                         page={'top':'my_teams', 'sub':'all_my'},
                         teams=teams)
             return redirect(url_for('all'))
@@ -68,19 +71,19 @@ def show(team_id=-1, action=''):
             team = Team.query.filter_by(id=team_id).first()
         else:
             team = None
- 
+
         if not team:
-            flash(u'Team not found')
+            flash(u'Team not found', 'error')
             return redirect(url_for('all'))
 
         if action == 'join':
             if not g.user:
-                flash(u'You must be signed in to join a team.')
-            elif is_on_current_team(team_id):
-                flash(u'You are already on this team.')
-            elif len(g.teams): # TODO support for more than 1 team
+                flash(u'You must be signed in to join a team.', 'error')
+            elif g.user.is_on_team(team_id):
+                flash(u'You are already on this team.', 'info')
+            elif g.user.is_on_team():
                 flash(u'You are already on a team.  Leave your current team '
-                       'first before joining this team.')
+                       'first before joining this team.', 'error')
             else:
                 join_form = JoinTeamForm(request.form)
 
@@ -98,15 +101,15 @@ def show(team_id=-1, action=''):
                                     status=TeamPlayer.StatusNormal)
                     db.session.add(tp)
                     db.session.commit()
-                    flash(u'You have successfully joined this team.')
+                    flash(u'You have successfully joined this team.', 'success')
 
                 return redirect(url_for('show', team_id=team.id))
 
         elif action == 'leave':
             if not g.user:
-                flash(u'You must be signed in to join a team.')
-            elif not is_on_current_team(team_id):
-                flash(u'You are not on this team.')
+                flash(u'You must be signed in to join a team.', 'error')
+            elif not g.user.is_on_team(team_id):
+                flash(u'You are not on this team.', 'error')
             else:
                 leave_form = LeaveTeamForm(request.form)
 
@@ -114,7 +117,7 @@ def show(team_id=-1, action=''):
                     # make sure there is still a founder on the team
 
                     skip = False
-                    if team.id in g.founder_teams:
+                    if team.id in g.user.founder_teams:
                         other_founders = False
                         for p in team.players:
                             if p.status == TeamPlayer.StatusFounder and \
@@ -123,9 +126,9 @@ def show(team_id=-1, action=''):
                                 break
 
                         if not other_founders:
-                            flash(u'''You cannot leave this team because you are
-                                the only founder.  Add another founder
-                                first.''')
+                            flash(u'You cannot leave this team because you '\
+                                   'are the only founder.  Add another '\
+                                   'founder first.', 'error')
                             skip = True
 
                     if not skip:
@@ -139,11 +142,12 @@ def show(team_id=-1, action=''):
                                     filter_by(team_id=team.id))).\
                                 filter_by(user_id=g.user.id).delete(False)
                         db.session.commit()
-                        flash(u'You have successfully left this team.')
+                        flash(u'You have successfully left this team.',
+                              'success')
                         return redirect(url_for('show',team_id=team.id))
 
         # only edit or delete for own team if a team leader
-        elif is_team_leader(team_id):
+        elif g.user.is_team_leader(team_id):
             if action == 'edit' and \
                     request.values.get('edit_players') == '1':
                 action = 'edit_players'
@@ -166,7 +170,7 @@ def show(team_id=-1, action=''):
                 for p in team.players:
                     players[p.user_id] = p.user.name
 
-                if not is_founder(team_id):
+                if not g.user.is_founder(team_id):
                     choices_no_founder = [ (s, n) for s, n in \
                             TeamPlayer.StatusChoices if s !=
                             TeamPlayer.StatusFounder ]
@@ -183,8 +187,8 @@ def show(team_id=-1, action=''):
                 if form.validate_on_submit():
                     form.populate_obj(team)
                     db.session.commit()
-                    flash(u'Team was successfully updated')
-                    return redirect(url_for('show', 
+                    flash(u'The team was successfully updated.', 'success')
+                    return redirect(url_for('show',
                         team_id=team.id, action='edit'))
 
                 return rt('teams/create.html', team_id=team.id,
@@ -196,7 +200,7 @@ def show(team_id=-1, action=''):
                 for p in team.players:
                     players[p.user_id] = p.user.name
 
-                if not is_founder(team_id):
+                if not g.user.is_founder(team_id):
                     choices_no_founder = [ (s, n) for s, n in \
                             TeamPlayer.StatusChoices if s !=
                             TeamPlayer.StatusFounder ]
@@ -240,13 +244,14 @@ def show(team_id=-1, action=''):
 
                     save = True
                     if len(new_founders) < 1:
-                        flash(u'There must be at least one founder on the team.')
+                        flash(u'There must be at least one founder on the '
+                               'team.', 'error')
                         save = False
 
-                    if team_id not in g.founder_teams and \
+                    if team_id not in g.user.founder_teams and \
                             (editing_founders or deleting_founders):
                         flash(u'You must be a founder to edit or delete a '
-                               'founder.')
+                               'founder.', 'error')
                         save = False
 
                     if save:
@@ -264,8 +269,8 @@ def show(team_id=-1, action=''):
                                     delete(False)
 
                         db.session.commit()
-                        flash(u'Team was successfully updated')
-                        return redirect(url_for('show', 
+                        flash(u'The team was successfully updated.', 'success')
+                        return redirect(url_for('show',
                             team_id=team.id, action='edit'))
 
                 return rt('teams/create.html',
@@ -277,26 +282,25 @@ def show(team_id=-1, action=''):
                 if request.method == 'POST':
                     db.session.delete(team)
                     db.session.commit()
-                    flash(u'Team was successfuly deleted')
+                    flash(u'The team was successfuly deleted.', 'success')
                     return redirect(url_for('all'))
 
-                flash(u'Team not found')
+                flash(u"That team doesn't exist.", 'error')
                 return redirect(url_for('show', team_id=team.id))
 
         elif action in ('delete', 'edit'):
-            flash(u'You must be a team leader to edit the team.')
+            flash(u'You must be a team leader to edit the team.', 'error')
 
         join_form = None
         leave_form = None
-        if g.user:
-            if team_id not in g.teams:
+        if not g.user.is_guest:
+            if not g.user.is_on_team(team_id):
                 join_form = JoinTeamForm()
             else:
                 leave_form = LeaveTeamForm()
 
         cmatches = CompletedMatch.query.filter_by(team_id=team_id).all()
 
-        # TODO: do this in sql
         wins = 0
         losses = 0
         draws = 0
@@ -312,7 +316,7 @@ def show(team_id=-1, action=''):
                 order_by(TeamPlayer.status.asc()).\
                 order_by(User.name.asc())
 
-        return rt('teams/single.html', 
+        return rt('teams/single.html',
                 page=page,
                 wins=wins, losses=losses, draws=draws,
                 team=team,
@@ -325,9 +329,9 @@ def show(team_id=-1, action=''):
 @teams.route('/team/add', methods=('GET','POST'))
 @require_login(page={'top':'teams','sub':'add_team'})
 def add():
-    if len(g.teams):
+    if g.user.is_on_team():
         flash(u'You are already on a team.  Leave your current team first '
-               'before creating a new one.')
+               'before creating a new one.', 'error')
         return redirect(url_for('my_teams'))
 
     team_names = [ t.name.lower() for t in Team.query.all() ]
@@ -350,51 +354,51 @@ def add():
         db.session.add(team_player)
         db.session.commit()
 
-        flash(u'The team was successfully created.')
+        flash(u'The team was successfully created.', 'success')
         return redirect(url_for('matches.my_matches'))
 
-    return rt('teams/create.html', 
+    return rt('teams/create.html',
             page={'top': 'teams', 'sub': 'add_team'},
             adding=True,
             form=form)
 
 @teams.route('/team/<int:team_id>/matches/')
-@teams.route('/teams/<int:team_id>/matches/')
 def matches(team_id=0):
     return matches_all(team_id)
 
 @teams.route('/team/<int:team_id>/records/')
-@teams.route('/teams/<int:team_id>/records/')
 def records(team_id=0):
+    if not g.user.is_on_team(team_id):
+        return jsonify(success=False)
+
     api = request.values.get('api') == '1'
 
     team = Team.query.filter_by(id=team_id).first()
 
     if not team:
-        return redirect(url_for('all'))
+        return jsonify(success=False)
 
     match_id = request.values.get('match_id')
     match = Match.query.filter_by(id=match_id).first()
 
     if not match:
-        return redirect(url_for('all'))
+        return jsonify(success=False)
 
     ( opponent_rec, competition_rec, server_rec, opp_comp_rec ) = \
-            match.get_match_records(team_id)
+            match.historical_records()
 
     return jsonify(success=True, opponent_rec=opponent_rec,
-            competition_rec=competition_rec, server_rec=server_rec, 
+            competition_rec=competition_rec, server_rec=server_rec,
             opp_comp_rec=opp_comp_rec)
 
 @teams.route('/team/<int:team_id>/stats/')
-@teams.route('/teams/<int:team_id>/stats/')
 def stats(team_id=0):
     team = Team.query.filter_by(id=team_id).first()
 
     if not team:
         return redirect(url_for('all'))
 
-    if team_id in g.teams:
+    if g.user.is_on_team(team_id):
         page = { 'top' : 'my_teams', 'sub' : 'player_stats' }
     else:
         page = { 'top' : 'team', 'sub' : 'player_stats' }
@@ -472,7 +476,7 @@ def stats(team_id=0):
             db.select(columns=['user_id', db.func.count()],\
                       from_obj=pcount_subquery).\
             group_by('user_id') )
-   
+
     pcounts = dict()
     for p in positive_counts:
         pcounts[ p[0] ] = p[1]
@@ -515,7 +519,7 @@ def stats(team_id=0):
                                  db.func.sum(CompletedMatchPlayer.def_objs),
                                  db.func.sum(CompletedMatchPlayer.score),
                   db.func.count(db.func.distinct(CompletedMatch.id))).\
-            join((CompletedMatch, 
+            join((CompletedMatch,
                   CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
             filter(CompletedMatch.team_id == team_id).\
             filter(CompletedMatch.competition_id.in_(competition_ids)).\
@@ -577,7 +581,7 @@ def stats(team_id=0):
             db.select(columns=['user_id', grouper.key, db.func.count()],\
                       from_obj=pcount_subquery).\
             group_by(grouper.key, 'user_id') )
-   
+
     pcounts = dict()
     for p in positive_counts:
         pcounts[ (p[0], p[1]) ] = p[2]
@@ -640,7 +644,7 @@ def stats(team_id=0):
                                  db.func.sum(CompletedMatchPlayer.def_objs),
                                  db.func.sum(CompletedMatchPlayer.score),
                   db.func.count(db.func.distinct(CompletedMatch.id))).\
-            join((CompletedMatch, 
+            join((CompletedMatch,
                   CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
             join((CompletedMatchRound,\
                   db.and_(\
@@ -684,7 +688,7 @@ def stats(team_id=0):
     if grouper.key == 'competition_id':
         cmatches = db.session.query(grouper,
                 CompletedMatch.id,
-                CompletedMatch.wins, 
+                CompletedMatch.wins,
                 CompletedMatch.losses).\
                 filter_by(team_id=team_id).\
                 filter(CompletedMatch.competition_id.in_(competition_ids)).\
@@ -738,7 +742,7 @@ def stats(team_id=0):
     for p in team.players:
         phash[p.user_id] = p.user.name
 
-    return rt('teams/stats.html', 
+    return rt('teams/stats.html',
             page=page,
             game=game,
             combined=False,
@@ -761,7 +765,7 @@ def combined_stats(team_id=0):
     if not team:
         return redirect(url_for('all'))
 
-    if team_id in g.teams:
+    if g.user.is_on_team(team_id):
         page = { 'top' : 'my_teams', 'sub' : 'player_stats' }
     else:
         page = { 'top' : 'team', 'sub' : 'player_stats' }
@@ -848,7 +852,7 @@ def combined_stats(team_id=0):
             db.select(columns=['user_id', db.func.count()],\
                       from_obj=pcount_subquery).\
             group_by('user_id') )
-   
+
     pcounts = dict()
     for p in positive_counts:
         pcounts[ p[0] ] = p[1]
@@ -911,7 +915,7 @@ def combined_stats(team_id=0):
                                  db.func.sum(CompletedMatchPlayer.def_objs),
                                  db.func.sum(CompletedMatchPlayer.score),
                   db.func.count(db.func.distinct(CompletedMatch.id))).\
-            join((CompletedMatch, 
+            join((CompletedMatch,
                   CompletedMatchPlayer.cmatch_id == CompletedMatch.id)).\
             join((CompletedMatchRound,\
                   db.and_(\
@@ -1010,7 +1014,7 @@ def combined_stats(team_id=0):
     for p in team.players:
         phash[p.user_id] = p.user.name
 
-    return rt('teams/stats.html', 
+    return rt('teams/stats.html',
             page=page,
             game=game,
             combined=True,

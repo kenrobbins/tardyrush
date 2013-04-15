@@ -29,12 +29,12 @@ class CompletedMatch(db.Model):
             index=True, default=datetime.utcnow())
     date_created = db.Column('date_created', db.DateTime, nullable=False,
             default=datetime.utcnow())
-    creator_user_id = db.Column('creator_user_id', id_type, 
+    creator_user_id = db.Column('creator_user_id', id_type,
             db.ForeignKey('users.user_id'),
             nullable=False)
     final_result_method = db.Column('final_result_method', db.Integer(),
             nullable=False)
-    
+
     wins = db.Column('wins', db.Integer(), nullable=False)
     losses = db.Column('losses', db.Integer(), nullable=False)
     draws = db.Column('draws', db.Integer(), nullable=False)
@@ -58,11 +58,16 @@ class CompletedMatch(db.Model):
     rounds = db.relation("CompletedMatchRound",
             cascade="delete,delete-orphan,save-update,merge", lazy='dynamic')
 
+    @property
+    def is_forfeit(self):
+        return self.final_result_method == self.__class__.FinalResultByForfeit
+
+
 class CompletedMatchRound(db.Model):
     __tablename__ = 'completed_match_rounds'
 
     cmatch_id = db.Column('cmatch_id', id_type,
-            db.ForeignKey('completed_matches.cmatch_id'), 
+            db.ForeignKey('completed_matches.cmatch_id'),
             nullable=False, primary_key=True, autoincrement=False)
     round_id = db.Column('round_id', db.Integer(unsigned=True), nullable=False,
             primary_key=True, autoincrement=False)
@@ -81,8 +86,9 @@ class CompletedMatchRound(db.Model):
     side = db.relation(Side)
     gametype = db.relation(GameType)
 
-    players = db.relation("CompletedMatchPlayer", # TODO order by name?
-            cascade="delete,delete-orphan,save-update,merge")#, lazy='dynamic')
+    players = db.relation("CompletedMatchPlayer",
+                          cascade="delete,delete-orphan,save-update,merge")
+                          #, lazy='dynamic')
 
 class CompletedMatchPlayer(db.Model):
     __tablename__ = 'completed_match_players'
@@ -95,7 +101,7 @@ class CompletedMatchPlayer(db.Model):
             db.ForeignKey('users.user_id'), nullable=False, primary_key=True)
 
     __table_args__ = ( db.ForeignKeyConstraint(['cmatch_id', 'round_id'],
-            ['completed_match_rounds.cmatch_id', 
+            ['completed_match_rounds.cmatch_id',
                 'completed_match_rounds.round_id']), {} )
 
     kills = db.Column('kills', db.Integer(unsigned=True), nullable=False)
@@ -107,11 +113,11 @@ class CompletedMatchPlayer(db.Model):
     score = db.Column('score', db.Integer(unsigned=False), nullable=False)
 
     user = db.relation("User")
-  
+
 
 
 class CompletedMatchPlayerForm(Form):
-    user_id = SelectField(u'Player', coerce=int, choices=[], 
+    user_id = SelectField(u'Player', coerce=int, choices=[],
             validators=[Required()])
     kills = IntegerField(u'Kills', default=0,
             validators=[NumberRange(min=0)])
@@ -150,11 +156,9 @@ class CompletedMatchForm(Form):
     team_id = SelectField(u'Team', coerce=int, validators=[Required()])
     match_id = HiddenIntegerField(u'Corresponding Match',
             validators=[NumberRange(min=1), Required()])
-    #match_id = SelectField(u'Corresponding Match', choices=[],
-    #        coerce=int, validators=[Required()])
     opponent_id = SelectField(u'Opponent', coerce=int, choices=[],
             validators=[Required()])
-    competition_id = SelectField(u'Competition', coerce=int, 
+    competition_id = SelectField(u'Competition', coerce=int,
             validators=[Required()])
     server_id = SelectField(u'Server', coerce=int, validators=[Required()])
     date_played = MatchDateTimeField(u'Date', validators=[Required()])
@@ -164,4 +168,3 @@ class CompletedMatchForm(Form):
             validators=[Required()], choices=CompletedMatch.FinalResultChoices)
 
     rounds = FieldList(FormField(CompletedMatchRoundForm))
-

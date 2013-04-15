@@ -1,6 +1,8 @@
 from datetime import datetime
 from flask import Module, g, session, flash, request, url_for
-from flaskext.babel import refresh as babel_refresh, to_user_timezone
+from flaskext.babel import (refresh as babel_refresh,
+                            to_user_timezone,
+                            format_datetime)
 from tardyrush import oid, app, db
 from tardyrush.views import require_login
 from tardyrush.helpers import rt, jsonify, redirect
@@ -17,7 +19,7 @@ def create_or_login(resp):
 
     user = User.query.filter_by(openid=resp.identity_url).first()
     if user is not None:
-        flash(u'You were successfully signed in.')
+        flash(u'You were successfully signed in.', 'success')
         g.user = user
         return redirect(oid.get_next_url())
 
@@ -30,7 +32,7 @@ def create_or_login(resp):
 @account.route('/signin/<t>/', methods=('GET', 'POST'))
 @oid.loginhandler
 def signin(t):
-    if g.user is not None:
+    if not g.user.is_guest:
         return redirect(oid.get_next_url())
 
     if request.method == 'POST':
@@ -53,7 +55,7 @@ def force_login(username):
     if app.debug:
         user = User.query.filter_by(name=username).first()
         if user is not None:
-            flash(u'Logged in as %s' % username)
+            flash(u'Logged in as %s' % username, 'success')
             session['force_login'] = username
             g.user = user
         return redirect(url_for('create_profile'))
@@ -64,7 +66,7 @@ def create_profile():
     if app.debug and 'openid' not in session:
         session['openid'] = 'test'
 
-    if g.user is not None or 'openid' not in session:
+    if not g.user.is_guest or 'openid' not in session:
         return redirect(url_for('.index'))
 
     names = set()
@@ -86,7 +88,7 @@ def create_profile():
 
         db.session.add(user)
         db.session.commit()
-        flash(u'Profile successfully created')
+        flash(u'Profile successfully created', 'success')
         return redirect(oid.get_next_url())
 
     if not len(form.errors):
@@ -106,7 +108,7 @@ def update_time_zone():
         form.populate_obj(g.user)
         db.session.commit()
         babel_refresh()
-        flash(u'Your time zone was successfully updated.')
+        flash(u'Your time zone was successfully updated.', 'success')
 
         now = to_user_timezone(datetime.utcnow())
         user_tz_names = (format_datetime(now, 'zzzz'), format_datetime(now, 'zzz'))
@@ -114,7 +116,7 @@ def update_time_zone():
         return jsonify(success=True, time_zone=form.time_zone.data,
                 csrf=form.csrf_token.data, user_tz_names=user_tz_names)
 
-    flash(u'There was an error updating your time zone.')
+    flash(u'There was an error updating your time zone.', 'error')
     return jsonify(success=False)
 
 @account.route('/settings/', methods=('GET','POST'))
@@ -137,16 +139,15 @@ def settings():
         form.populate_obj(g.user)
         db.session.commit()
         babel_refresh()
-        flash(u'Settings successfully updated.')
+        flash(u'Settings successfully updated.', 'success')
         return redirect(url_for('settings'))
 
     return rt('account/create.html', settings=True, form=form)
 
-@account.route('/logout')
 @account.route('/signout')
 def signout():
     session.pop('openid', None)
     session.pop('force_login', None)
-    flash(u'You were signed out.')
+    session.clear()
+    flash(u'You were signed out.', 'info')
     return redirect('/')
-

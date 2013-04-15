@@ -4,14 +4,13 @@ function update_csrf(data) {
     }
 }
 
-function update_player_status(obj) {
-    var form = $(obj).parent();
+function update_player_status(match_id, new_status) {
+    var form = $('#sb_form_'+match_id);
     var csrf = form.find('input[name=csrf_token]').val();
-    var s = form.find('input[name=s]').val();
     var url = form.attr('action');
     $.post(url, {
             csrf_token: csrf,
-            s: s,
+            s: new_status,
             api: '1'
         }, function(data) {
             update_csrf(data);
@@ -33,7 +32,7 @@ function update_player_status(obj) {
                         var statlower = $.trim(stat.toLowerCase());
                         if (!firstmaybe && statlower == 'maybe')
                             firstmaybe = $(this);
-                        
+
                         if (!firstunavail && statlower == 'unavailable')
                             firstunavail = $(this);
                     }
@@ -51,7 +50,7 @@ function update_player_status(obj) {
                         before = firstunavail;
                 }
 
-                var newrow = "<tr class='current_user'><td>" + data.user_name + 
+                var newrow = "<tr class='info'><td>" + data.user_name +
                               "</td><td id='"+id+"' class='"+lower_status+"'>"+
                               data.player_status_pretty+"</td></tr>";
 
@@ -63,9 +62,15 @@ function update_player_status(obj) {
                 }
                 tbl.show();
 
-                var btnid = '#sb_'+lower_status+'_'+data.match_id;
-                $('#status_buttons_'+data.match_id).find('form').show();
-                $(btnid).hide();
+                var sb = $('#status_buttons_'+data.match_id+' li');
+                sb.each(function(index, value) {
+                    var btn = $(value);
+                    if (btn.hasClass(lower_status)) {
+                        btn.hide();
+                    } else {
+                        btn.show();
+                    }
+                });
             }
             else {
                 alert("An error has occured. Please try again.");
@@ -76,6 +81,7 @@ function update_player_status(obj) {
 
 function save_form(type) {
     var form = $('#'+type+'_form');
+    var modal = $('#'+type+'_modal');
     var csrf = form.find('input[name=csrf_token]').val();
 
     data = {
@@ -105,11 +111,13 @@ function save_form(type) {
 
     $.post(url, data, function(data) {
             update_csrf(data);
-            form.find('.errors').remove();
+            form.find('.help-inline').remove();
+            form.find('.error').removeClass("error");
+            modal.find('.modal_alert').remove();
             if (data.success) {
                 if (type == 'time_zone') {
-                    $(".full_time_zone").html(data.user_tz_names[0]);
-                    $(".abbr_time_zone").html(data.user_tz_names[1]);
+                    label = 'Date (in ' + data.user_tz_names[0] + ')';
+                    $("#match_form label[for=date]").html(label);
                 }
                 else {
                     var newval = $("<option></option>").
@@ -132,28 +140,38 @@ function save_form(type) {
                     sel.val(data[type+'_id']);
                 }
 
-                $.fancybox.close();
+                modal.modal('hide');
 
                 form.find('input[type=text]').val('');
 
-                $('#match_form').before(
-                    '<p id="addflash">'+type_pretty+' '+update_type+
-                    ' successfully.</p>');
-                $('#addflash').fadeIn(2500).delay(2000).fadeOut(2500);
+                var flash = '<div class="modal_alert alert alert-success">';
+                flash += '<button type="button" class="close" data-dismiss="alert">&times;</button>';
+                flash += '<strong>Hooray!</strong> '+type_pretty+' '+update_type+' successfully.';
+                flash += '</div>';
 
-                (function (el) {
-                    setTimeout(function() {
-                        el.remove();
-                    }, 5000);
-                } ($('#addflash')));
+                $('#match_form').before(flash);
             }
             else {
+                var flash = '<div class="modal_alert alert alert-error">';
+                flash += '<button type="button" class="close" data-dismiss="alert">&times;</button>';
+                flash += '<strong>Uh oh!</strong> Something went wrong.';
+                flash += '</div>';
+                form.before(flash);
                 $.each(data.errors, function(key, val) {
-                    var err = "<ul class='errors'><li>"+val+"</li></ul>";
-                    form.find('input[name='+key+']').before(err);
+                    var input = form.find('input[name='+key+']');
+                    var span_check = input.next();
+
+                    input.parent().parent().addClass("error");
+
+                    if (span_check.attr('class') == 'help-inline') {
+                        span_check.html(val);
+                    }
+                    else {
+                        var err = "<span class='help-inline'>"+val+"</span>";
+                        input.after(err);
+                    }
                 });
             }
         }, 'json');
     return false;
 }
-

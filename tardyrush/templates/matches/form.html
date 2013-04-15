@@ -1,71 +1,72 @@
 {% extends "layout.html" %}
 {% import 'helpers/forms.html' as forms %}
 {% block head %}
-<link href="/static/fancybox/jquery.fancybox-1.3.4.css" media="screen" rel="stylesheet" type="text/css" />
-<script type="text/javascript" src="/static/main.js"></script>
-<script type="text/javascript" src="/static/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
-<link type="text/css" href="http://code.jquery.com/ui/1.8.10/themes/redmond/jquery-ui.css" rel="stylesheet" />
-<script type="text/javascript" src="http://code.jquery.com/ui/1.8.10/jquery-ui.js"></script>
+<script type="text/javascript" src="/static/js/main.js"></script>
+<link type="text/css" href="http://code.jquery.com/ui/1.10.2/themes/redmond/jquery-ui.css" rel="stylesheet" />
+<script type="text/javascript" src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
 <script type="text/javascript">
-$(document).ready(function() {
-    $('#opponent_form input[type=submit]').click(function() {
-        return save_form('opponent');
+    $(document).ready(function() {
+        ['opponent', 'server', 'time_zone'].forEach(function(elem, arr, i) {
+            $('#'+elem+'_modal').on('hidden', function() {
+                var form = $('#'+elem+'_form');
+                var modal = $('#'+elem+'_modal');
+                form.find('.help-inline').remove();
+                form.find('.error').removeClass("error");
+                modal.find('.modal_alert').remove();
+            });
+        });
+        $('#opponent_form button[type=submit]').click(function() {
+            return save_form('opponent');
+        });
+        $('#server_form button[type=submit]').click(function() {
+            return save_form('server');
+        });
+        $('#time_zone_form button[type=submit]').click(function() {
+            return save_form('time_zone');
+        });
+        $('#match_form input.date').datepicker({
+            showOtherMonths: true,
+            selectOtherMonths: true,
+            showButtonPanel: true
+        });
     });
-    $('#server_form input[type=submit]').click(function() {
-        return save_form('server');
-    });
-    $('#time_zone_form input[type=submit]').click(function() {
-        return save_form('time_zone');
-    });
-    $('#add_opp_link').fancybox({
-        'titleShow' : false
-    });
-    $('#add_server_link').fancybox({
-        'titleShow' : false
-    });
-    $('#update_time_zone_link').fancybox({
-        'titleShow' : false
-    });
-    $('#match_form input.date').datepicker({
-        showOtherMonths: true,
-        selectOtherMonths: true,
-        showOn: "both",
-        buttonImage: "/static/calendar.png",
-        buttonImageOnly: true,
-        showButtonPanel: true
-    });
-});
 </script>
 {% endblock %}
+{% block title %}
+{% if adding %}Add a match{%else%}Edit a match{%endif%}
+{% endblock %}
 {% block body %}
-  <h2>{% if adding %}New Match{%else%}Edit Match{%endif%}</h2>
-  <form id="match_form" action="" method=post>
+<div class="page-header">
+    <h1>{% if adding %}Add a match{%else%}Edit a match{%endif%}</h1>
+</div>
+
+  <form id="match_form" action="" method="post">
     <input type="hidden" name="from" value="{{ request.values.get('from') }}"/>
     {{ form.hidden_tag() }}
-
-    {% if form.errors %}
-        <p>Uh oh! Please fix the errors below and try again.</p>
-    {% endif %}
 
     {% for field in form if not field|is_hidden_field -%}
         {% if field.type == 'FieldList' %}
             {% if not adding and field|count %}
                 <h2>Players</h2>
-                <table>
-                <tr>
-                <th>Player</th>
-                <th>Status</th>
-                <th>Remove?</th>
-                </tr>
+                <div class="span5 flush-left">
+                <table class="table">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Status</th>
+                        <th>Remove?</th>
+                    </tr>
+                </thead>
+                <tbody>
                 {% for f in field %}
                     {% if f.type == 'FormField' %}
                         <tr>
                         <td>{{ players[f['user_id'].data] }}</td>
                         <td>
                         {% if f.status.disabled %}
-                            {{ f.status(disabled='disabled') }}
+                            {{ f.status(class="span2", disabled='disabled') }}
                         {% else %}
-                            {{ f.status }}
+                            {{ f.status(class="span2") }}
                         {% endif -%}
                         </td>
                         <td>
@@ -78,86 +79,99 @@ $(document).ready(function() {
                         </tr>
                     {% endif -%}
                 {% endfor %}
+                </tbody>
                 </table>
+                </div>
+                <div class="clearfix"></div>
             {% endif %}
         {% elif field.type != 'FieldList' %}
             {% if field.name == 'team_id' and field.choices|count == 1 %}
-                <input type="hidden" name="{{field.name}}" 
-                    value="{{ field.choices[0][0] }}"/>
+                <input type="hidden" name="{{field.name}}" value="{{ field.choices[0][0] }}"/>
             {% else %}
-            <p>
-                {{ field.label }}
-                {% if field.name == 'date' -%}
-                    <span>(in <span class="full_time_zone">
-                    {{ user_now|fmt_datetime('zzzz') }}</span>)</span>
-                {%- endif -%}
-                {% if field.type != 'BooleanField' %}
-                    <br/>
-                {% endif %}
-                {% if field.errors -%}
-                    <div class="errors">
-                    <ul>
-                    {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
-                    </ul>
+                <div class="control-group {% if field.errors -%} error{%-endif-%}">
+                    {% if field.type != 'BooleanField' %}
+                        {{ field.label(class="control-label") }}
+                    {% endif %}
+                    <div class="controls">
+                        {% if field.type == 'BooleanField' %}
+                            <label class="checkbox">{{field}} {{field.label.text}}</label>
+                        {% elif field.name == 'date' %}
+                            {{ field(date_class="span2", time_class="span1") }}
+                        {% else %}
+                            {{ field(class="span5") }}
+                        {% endif -%}
+
+                        {% if field.errors|length > 1 -%}
+                            <ul class="help-block">
+                                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                            </ul>
+                        {% elif field.errors|length == 1 -%}
+                            <span class="help-inline">{{field.errors[0]}}</span>
+                        {% endif -%}
+
+                        {% if field.name == 'opponent_id' %}
+                            <span class="help-inline">
+                                <a data-toggle="modal" id="add_opp_link" href="#opponent_modal"
+                                    title="Add an opponent">or add an opponent</a>
+                            </span>
+                        {% elif field.name == 'server_id' %}
+                            <span class="help-inline">
+                                <a data-toggle="modal" id='add_server_link' href="#server_modal">or add a server</a>
+                            </span>
+                        {% elif field.name == 'competition_id' %}
+                            <span class="help-inline">
+                                <a target="_blank" href="{{url_for('.contact')}}">or ask for a new competition</a>
+                            </span>
+                        {% elif field.name == 'date' -%}
+                            <span class="help-inline">
+                                <a data-toggle="modal"
+                                    id="update_time_zone_link" href="#time_zone_modal">or change your time zone</a>
+                            </span>
+                        {% endif -%}
                     </div>
-                {% endif -%}
-                {{ field }}
-                {% if field.name == 'opponent_id' %}
-                <span><a id="add_opp_link" href="#opponent_form_container" title="Add an opponent">or add an opponent</a></span>
-                {% elif field.name == 'server_id' %}
-                <span><a id='add_server_link' href="#server_form_container">or add a server</a></span>
-                {% elif field.name == 'competition_id' %}
-                <span><a href="{{url_for('.contact')}}">or ask for a new competition</a></span>
-                {% elif field.name == 'date' -%}
-                <span>
-                <span class="abbr_time_zone">{{ user_now|fmt_datetime('zzz') }}</span>
-                <a id="update_time_zone_link"
-                href="#time_zone_form_container">or change your time zone</a>
-                </span>
-                {% endif -%}
-            </p>
+                </div>
             {% endif %}
         {% endif %}
     {% endfor -%}
 
-    <p>
-      <input type="submit" name="submit" 
-        value="{%- if adding %}Add Match{%else%}Save Match{%endif%}">
-    </p>
+    <button type="submit" class="btn btn-primary">
+        {%- if adding %}Add Match{%else%}Save Match{%endif%}
+    </button>
   </form>
 
     {% if match_id %}
-    <p>
-    <h2>Delete Match</h2>
-        <form method="post" action="{{url_for('matches.show', match_id=match_id,
-        action='delete')}}">
-        <input type="submit" value="Delete Match"/>
+        <h2>Delete Match</h2>
+        <form method="post" action="{{url_for('matches.show', match_id=match_id, action='delete')}}">
+            <button type="submit" class="btn btn-danger">Delete Match</button>
         </form>
-    </p>
     {% endif %}
 
-    <div style="display:none;">
-        <div id="opponent_form_container">
-            <div>
-            {{ forms.opponent(oform, g.team_leader_teams[0]) }}
-            </div>
+    <div id="opponent_modal" class="modal hide fade" tabindex="-1"
+        role="dialog" aria-labelledby="opponent_form_label" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 id="opponent_form_label">Add an opponent</h3>
         </div>
+
+        {{ forms.opponent(oform, g.user.teams[g.user.team_leader_teams[0]], modal=True) }}
     </div>
 
-    <div style="display:none;">
-        <div id="server_form_container">
-            <div>
-            {{ forms.server(sform, g.team_leader_teams[0]) }}
-            </div>
+    <div id="server_modal" class="modal hide fade" tabindex="-1"
+        role="dialog" aria-labelledby="server_form_label" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 id="server_form_label">Add a server</h3>
         </div>
+        {{ forms.server(sform, g.user.teams[g.user.team_leader_teams[0]], modal=True) }}
     </div>
 
-    <div style="display:none;">
-        <div id="time_zone_form_container">
-            <div>
-            {{ forms.time_zone(tzform) }}
-            </div>
+    <div id="time_zone_modal" class="modal hide fade" tabindex="-1"
+        role="dialog" aria-labelledby="time_zone_form_label" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 id="time_zone_form_label">Change your time zone</h3>
         </div>
+        {{ forms.time_zone(tzform) }}
     </div>
 
     <div id="stuff">

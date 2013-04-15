@@ -20,6 +20,10 @@ def rt(*args, **kwargs):
 
         return jsonify(success=False, errors=errors, csrf=csrf)
 
+    form = kwargs.get('form')
+    if form and form.errors:
+        flash("Please fix the errors below and try again.", "error")
+
     kwargs.setdefault('page', {'top':'main', 'sub':''})
     return render_template(*args, **kwargs)
 
@@ -27,4 +31,3 @@ def redirect(*args, **kwargs):
     if request.values.get('api') == '1':
         return jsonify(success=False)
     return flask_redirect(*args, **kwargs)
-

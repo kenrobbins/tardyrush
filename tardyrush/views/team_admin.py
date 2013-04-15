@@ -13,8 +13,8 @@ team_admin = Module(__name__)
 @team_admin.route('/team/<int:team_id>/server/add/', methods=('GET','POST'))
 @require_login()
 def add_server(team_id=0):
-    if not is_team_leader(team_id):
-        flash(u'You must be a team leader to add a server.')
+    if not g.user.is_team_leader(team_id):
+        flash(u'You must be a team leader to add a server.', 'error')
         return redirect(url_for('teams.my_teams'))
 
     servers = Server.query.\
@@ -32,7 +32,7 @@ def add_server(team_id=0):
                         address=form.address.data)
         db.session.add(server)
         db.session.commit()
-        flash(u'The server was successfully added.')
+        flash(u'The server was successfully added.', 'success')
 
         if api:
             return jsonify(success=True, server_id=server.id,
@@ -51,20 +51,20 @@ def add_server(team_id=0):
 
     return rt('team_admin/server_form.html',
             page={'top':'my_teams', 'sub':'admin'},
-            team={'id':team_id,'name':g.teams[team_id]},
+            team={'id':team_id,'name':g.user.teams[team_id].name},
             adding=True, form=form)
 
 @team_admin.route('/team/<int:team_id>/server/<int:server_id>/<action>/', methods=('GET','POST'))
 @require_login()
 def server(team_id, server_id, action):
-    if not is_team_leader(team_id):
-        flash(u'You must be a team leader to add a server.')
+    if not g.user.is_team_leader(team_id):
+        flash(u'You must be a team leader to add a server.', 'error')
         return redirect(url_for('teams.my_teams'))
 
     server = Server.query.filter_by(id=server_id).first()
 
-    if not server or not is_team_leader(server.team_id):
-        flash(u'Server not found.')
+    if not server or not g.user.is_team_leader(server.team_id):
+        flash(u'Server not found.', 'error')
         return redirect(url_for('teams.my_teams'))
 
     if action == 'edit':
@@ -80,10 +80,10 @@ def server(team_id, server_id, action):
         if form.validate_on_submit():
             form.populate_obj(server)
             db.session.commit()
-            flash(u'The server was successfully updated.')
+            flash(u'The server was successfully updated.', 'success')
         else:
             return rt('team_admin/server_form.html',
-                    team={'id':team_id, 'name':g.teams[team_id]},
+                    team={'id':team_id, 'name':g.user.teams[team_id].name},
                     page={'top':'my_teams', 'sub':'admin'},
                     server_id=server_id,
                     adding=False, form=form)
@@ -91,7 +91,7 @@ def server(team_id, server_id, action):
         if request.method == 'POST':
             db.session.delete(server)
             db.session.commit()
-            flash(u'The server was successfully deleted.')
+            flash(u'The server was successfully deleted.', 'success')
 
     return redirect(url_for('index',team_id=team_id))
 
@@ -99,8 +99,8 @@ def server(team_id, server_id, action):
 @team_admin.route('/team/<int:team_id>/opponent/add/', methods=('GET','POST'))
 @require_login()
 def add_opponent(team_id=0):
-    if not is_team_leader(team_id):
-        flash(u'You must be a team leader to add an opponent.')
+    if not g.user.is_team_leader(team_id):
+        flash(u'You must be a team leader to add an opponent.', 'error')
         return redirect(url_for('teams.my_teams'))
 
     opponents = Opponent.query.\
@@ -118,7 +118,7 @@ def add_opponent(team_id=0):
                             tag=form.tag.data)
         db.session.add(opponent)
         db.session.commit()
-        flash(u'The opponent was successfully added.')
+        flash(u'The opponent was successfully added.', 'success')
 
         if api:
             return jsonify(success=True, opponent_id=opponent.id,
@@ -136,7 +136,7 @@ def add_opponent(team_id=0):
     form.f.data = request.values.get('f') or ''
 
     return rt('team_admin/opponent_form.html',
-            team={'id' : team_id, 'name':g.teams[team_id]},
+            team={'id' : team_id, 'name':g.user.teams[team_id].name},
             page={'top':'my_teams', 'sub':'admin'},
             adding=True, form=form)
 
@@ -145,15 +145,15 @@ def add_opponent(team_id=0):
         methods=('GET','POST'))
 @require_login()
 def opponent(team_id, opponent_id, action):
-    if not is_team_leader(team_id):
-        flash(u'You must be a team leader to add an opponent.')
+    if not g.user.is_team_leader(team_id):
+        flash(u'You must be a team leader to add an opponent.', 'error')
         return redirect(url_for('teams.my_teams'))
 
     opponent = Opponent.query.filter_by(id=opponent_id).first()
 
-    if not opponent or not is_team_leader(opponent.team_id) or team_id !=\
-            opponent.team_id:
-        flash(u'Opponent not found.')
+    if not opponent or not g.user.is_team_leader(opponent.team_id) \
+            or team_id != opponent.team_id:
+        flash(u'Opponent not found.', 'error')
         return redirect(url_for('teams.my_teams'))
 
     if action == 'edit':
@@ -168,27 +168,26 @@ def opponent(team_id, opponent_id, action):
         if form.validate_on_submit():
             form.populate_obj(opponent)
             db.session.commit()
-            flash(u'The opponent was successfully updated.')
+            flash(u'The opponent was successfully updated.', 'success')
         else:
             return rt('team_admin/opponent_form.html',
                     page={'top':'my_teams', 'sub':'admin'},
-                    team={'id' : team_id, 'name':g.teams[team_id]},
+                    team={'id' : team_id, 'name':g.user.teams[team_id].name},
                     opponent_id=opponent_id,
                     adding=False, form=form)
     elif action == 'delete':
         if request.method == 'POST':
             db.session.delete(opponent)
             db.session.commit()
-            flash(u'The opponent was successfully deleted.')
+            flash(u'The opponent was successfully deleted.', 'success')
 
     return redirect(url_for('index',team_id=team_id))
 
 
 @team_admin.route('/team/<int:team_id>/admin/')
-@team_admin.route('/teams/<int:team_id>/admin/')
 def index(team_id=0):
-    if not team_id or not is_team_leader(team_id):
-        flash(u'You must be a team leader to administrate the team.')
+    if not team_id or not g.user.is_team_leader(team_id):
+        flash(u'You must be a team leader to administrate the team.', 'error')
         return redirect(url_for('teams.my_teams'))
 
     opponents = Opponent.query.\
@@ -208,7 +207,7 @@ def index(team_id=0):
 
     return rt('team_admin/index.html',
             page={'top':'my_teams','sub':'admin'},
-            team={'id' : team_id, 'name':g.teams[team_id]},
+            team={'id' : team_id, 'name':g.user.teams[team_id].name},
             opponents=opponents,
             servers=servers,
             forum_bots=forum_bots)
@@ -216,8 +215,8 @@ def index(team_id=0):
 @team_admin.route('/team/<int:team_id>/forum_bots/add/', methods=('GET','POST'))
 @require_login()
 def add_forum_bot(team_id=0):
-    if not team_id or not is_team_leader(team_id):
-        flash(u'You must be a team leader to add a forum helper.')
+    if not team_id or not g.user.is_team_leader(team_id):
+        flash(u'You must be a team leader to add a forum helper.', 'error')
         return redirect(url_for('teams.my_teams'))
 
     form = ForumBotForm()
@@ -239,11 +238,11 @@ def add_forum_bot(team_id=0):
                              password=form.password.data)
         db.session.add(forum_bot)
         db.session.commit()
-        flash(u'The forum helper was successfully added.')
+        flash(u'The forum helper was successfully added.', 'success')
         return redirect(url_for('index',team_id=team_id))
 
     return rt('team_admin/forum_bot_form.html',
-            team={'id' : team_id, 'name':g.teams[team_id]},
+            team={'id' : team_id, 'name':g.user.teams[team_id].name},
             page={'top':'my_teams', 'sub':'admin'},
             adding=True, form=form)
 
@@ -251,14 +250,14 @@ def add_forum_bot(team_id=0):
 @team_admin.route('/team/<int:team_id>/forum_helper/<int:forum_bot_id>/<action>/', methods=('GET','POST'))
 @require_login()
 def forum_bot(team_id,forum_bot_id, action):
-    if not is_team_leader(team_id):
-        flash(u'You must be a team leader to add a forum helper.')
+    if not g.user.is_team_leader(team_id):
+        flash(u'You must be a team leader to add a forum helper.', 'error')
         return redirect(url_for('teams.my_teams'))
 
     forum_bot = ForumBot.query.filter_by(id=forum_bot_id).first()
 
     if not forum_bot or team_id != forum_bot.team_id:
-        flash(u'Forum helper not found.')
+        flash(u'Forum helper not found.', 'error')
         return redirect(url_for('teams.my_teams'))
 
     if action == 'edit':
@@ -274,18 +273,18 @@ def forum_bot(team_id,forum_bot_id, action):
                 form.game_id.data = form.game_id.data
             form.populate_obj(forum_bot)
             db.session.commit()
-            flash(u'The forum helper was successfully updated.')
+            flash(u'The forum helper was successfully updated.', 'success')
         else:
             return rt('team_admin/forum_bot_form.html',
                     page={'top':'my_teams', 'sub':'admin'},
-                    team={'id' : team_id, 'name':g.teams[team_id]},
+                    team={'id' : team_id, 'name':g.user.teams[team_id].name},
                     forum_bot_id=forum_bot_id,
                     adding=False, form=form)
     elif action == 'delete':
         if request.method == 'POST':
             db.session.delete(forum_bot)
             db.session.commit()
-            flash(u'The forum helper was successfully deleted.')
+            flash(u'The forum helper was successfully deleted.', 'success')
 
     return redirect(url_for('index', team_id=team_id))
 

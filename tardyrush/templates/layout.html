@@ -1,205 +1,146 @@
 <!doctype html>
-<html>
-<head>
-<link href="/static/main.css" media="screen" rel="stylesheet" type="text/css" />
-<link href="/static/960grid.css" media="screen" rel="stylesheet" type="text/css" />
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.js"></script>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <link href="/static/css/main.css" media="screen" rel="stylesheet" type="text/css" />
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.js"></script>
+        <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet" />
+        <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
 
-{%block head%}{%endblock%}
+        {%block head%}{%endblock%}
 
-<title>Tardy Rush {%block title%}{%endblock%}</title>
-
-{% if not g.debug %}
-<script type="text/javascript">
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-21839239-1']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-</script>
-{% endif %}
-</head>
-<body>
-
-<div class="container_12">
-    <div class="grid_12 alpha omega" id="topmenu">
-        {%- if g.user -%}
-            {%- if not g.teams|count -%}
-                <ul class="left_links">
-                    <li><a href="{{url_for('teams.add')}}">Add Your Team</a>
-                    <span>or</span>
-                        <a href="{{url_for('teams.all')}}">Find Your Team</a>
-                    </li>
-                </ul>
-            {%- endif -%}
-        {%- else -%}
-            <ul class="left_links">
-                <li><a href="{{url_for('teams.add')}}">Join Now!</a></li>
-            </ul>
-        {%- endif -%}
-        <ul class="links">
-        {% if g.user %}
-            <li>Signed in as <a href="{{url_for('account.settings')}}">{{g.user.name}}</a></li>
-            <li><a href="{{url_for('account.settings')}}">Settings</a></li>
-            <li class="last_item"><a href="{{url_for('account.signout')}}">Sign Out</a></li>
-        {% else %}
-            <li class="last_item">
-              <form action="{{url_for('account.signin')}}" method="post">
-                  <input type="hidden" name="next" value="{{ request.url }}"/>
-                  <input type="image" src="/static/sits_small.png"
-                  name="submit_sits" value="Sign In Through Steam"
-                  title="Sign In Through Steam"/>
-              </form>
-            </li>
-        {% endif %}
-        </ul>
-    </div>
-    
-    <div class="grid_4" id="logomain">
-        <a href="/" title="tardyrush home"></a>
-    </div>
-
-    <div class="grid_7" id="secondarymenu">
-        <div id="secondarymenugroup">
-        <div id="search">
-            <form name="cse" id="searchbox" action="http://www.google.com/cse"> 
-                <input type="hidden" name="cref" value="http://tardyrush.com" /> 
-                <input type="hidden" name="ie" value="utf-8" /> 
-                <input type="hidden" name="hl" value="" /> 
-                <input type="text" id="q" name="q" value="" /> 
-                <input type="image" name="sa" id="sa"
-                src="/static/magnifier.png"/>
-            </form> 
-            <script type="text/javascript" src="http://www.google.com/cse/tools/onthefly?form=searchbox&lang="></script>
-        </div>
-        <ul>
-            <li><a href="{{url_for('.contact')}}">Contact</a></li>
-        </ul>
-        <br class="clear"/>
-        </div>
-    </div>
-
-    <div id="mainarea" class="grid_12 alpha omega">
-
-        <div id="mainmenu">
-        <ul>
-            {%- if g.user -%}
-            <li class="first {% if page.top == 'my_matches' %}selected{% endif
-            %}">
-                <a href="{{ url_for('matches.my_matches') }}">My Matches</a>
-            </li>
-            <li class="{% if page.top == 'my_teams' %}selected{%endif%}">
-                <a href="{{ url_for('teams.my_teams') }}">My Teams</a>
-            </li>
-            {%- endif -%}
-            <li class="{% if not g.user %}first{%endif%} {% if page.top ==
-            'matches' %}selected{%endif%}">
-                <a href="{{ url_for('matches.all') }}">Matches</a></li>
-            <li class="last {% if page.top ==
-            'teams' %}selected{% endif %}">
-                <a href="{{ url_for('teams.all') }}">Teams</a></li>
-        </ul>
-        <br class="clear"/>
-        </div>
-
-
-
-    {%- if page.top == 'my_matches' %}
-        <div id="tabmenu" class="grid_12 alpha omega">
-            <div>
-            <ul>
-                <li class="first {% if page.sub == 'upcoming'
-                %}selected{%-endif %}"><a href="{{ url_for('matches.my_matches') }}">Upcoming</a></li>
-                <li class="{% if page.sub == 'previous'
-                %}selected{%-endif %}"><a href="{{ url_for('matches.my_previous_matches')
-                }}">Previous</a></li>
-                {%- if g.is_admin -%}
-                <li {% if page.sub == 'add_match' %} class="selected" {%-endif
-                %}><a href="{{url_for('matches.add')}}">New</a></li>
-                {%- endif -%}
-            </ul>
-            <br class="clear"/>
+        <title>Tardy Rush - {%block title%}{%endblock%}</title>
+    </head>
+    <body>
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="brand" href="/">tardyrush</a>
+                    <div class="nav-collapse collapse">
+                        <ul class="nav">
+                            <li {% if page.top in ('matches', 'my_matches') %}class="active"{%endif%}>
+                                <a href="{{ url_for('matches.all') }}">Matches</a></li>
+                            <li {% if page.top in ('teams', 'my_teams', 'team') %}class="active"{% endif %}>
+                                <a href="{{ url_for('teams.all') }}">Teams</a></li>
+                            <li {% if page.top == 'contact' %}class="active"{%endif%}>
+                                <a href="{{url_for('.contact')}}">Contact</a></li>
+                        </ul>
+                        {% if not g.user.is_guest %}
+                            <p class="navbar-text pull-right">
+                                Signed in as <a href="{{url_for('account.settings')}}">{{g.user.name}}</a>
+                                <a id="signout" href="{{url_for('account.signout')}}">Sign Out</a>
+                            </p>
+                        {% else %}
+                            <form class="navbar-form pull-right" action="{{url_for('account.signin')}}" method="post">
+                                <input type="hidden" name="next" value="{{ request.url }}"/>
+                                <input type="image" src="/static/sits_small.png"
+                                    name="submit_sits" value="Sign In Through Steam" title="Sign In Through Steam"/>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-    {%- elif page.top == 'teams' %}
-        <div class="grid_12 alpha omega" id="tabmenu">
-            <div>
-            <ul>
-                <li class="{% if page.sub == 'all_teams' %}selected {%-endif%}
-                first">
-                    <a href="{{ url_for('teams.all') }}">All Teams</a></li>
-                <li {% if page.sub == 'add_team' %} class="selected" {%-endif %}>
-                    <a href="{{ url_for('teams.add') }}">Create Team</a></li>
-            </ul>
-            <br class="clear"/>
+
+        <div class="container">
+            <div class="row">
+                {%- if page.top in ('matches', 'my_matches') %}
+                    <div class="span3">
+                        <div class="well sidebar-nav">
+                            <ul class="nav nav-list">
+                                <li class="nav-header">All Matches</li>
+                                <li {% if page.sub == 'all_matches' or page.top == 'matches'%}class="active"{%-endif %}>
+                                    <a href="{{ url_for('matches.all') }}">Show matches</a>
+                                </li>
+                                {%- if g.user.is_on_team() -%}
+                                    <li class="nav-header">My Matches</li>
+                                    <li {% if page.top == 'my_matches' and page.sub == 'upcoming' %}class="active"{%-endif %}>
+                                        <a href="{{ url_for('matches.my_matches') }}">Upcoming matches</a>
+                                    </li>
+                                    <li {% if page.top == 'my_matches' and page.sub == 'previous' %}class="active"{%-endif %}>
+                                        <a href="{{ url_for('matches.my_previous_matches') }}">Past matches</a>
+                                    </li>
+                                    {%- if g.user.is_admin -%}
+                                        <li {% if page.sub == 'add_match' %}class="active"{%-endif %}>
+                                            <a href="{{url_for('matches.add')}}">Add a match</a>
+                                        </li>
+                                    {%- endif -%}
+                                {%- endif -%}
+                            </ul>
+                        </div>
+                    </div>
+
+                {%- elif page.top in ('teams', 'my_teams', 'team') %}
+
+                    <div class="span3">
+                        <div class="well sidebar-nav">
+                            <ul class="nav nav-list">
+                                <li class="nav-header">All Teams</li>
+                                <li {% if page.sub == 'all_teams' %}class="active"{%-endif%}>
+                                    <a href="{{ url_for('teams.all') }}">Show teams</a>
+                                </li>
+                                <li {% if page.sub == 'add_team' %}class="active"{%-endif %}>
+                                    <a href="{{ url_for('teams.add') }}">Create a team</a>
+                                    </li>
+
+                                {%- if g.user.is_on_team() -%}
+                                    {%- if page.top != 'team' -%}
+                                        <li class="nav-header">My Team</li>
+                                    {%- else -%}
+                                        <li class="nav-header">This Team</li>
+                                        {%- endif -%}
+                                    <li class="{% if page.sub in ('main', 'all_my') %}active {%-endif%} ">
+                                        <a href="{{ url_for('teams.show',team_id=team.id) }}">Summary</a></li>
+                                    <li class="{% if page.sub == 'matches' %}active {%-endif%}">
+                                        <a href="{{ url_for('teams.matches', team_id=team.id) }}">Matches</a></li>
+                                    <li class="{% if page.sub == 'player_stats' %}active {%-endif%}">
+                                    <a href="{{ url_for('teams.stats', team_id=team.id) }}">Stats</a></li>
+                                    {%- if g.user.can_edit_team(team.id) -%}
+                                        <li class="nav-header">My Team Administration</li>
+                                        <li class="{% if page.sub == 'admin' %}active {%-endif%}">
+                                            <a href="{{ url_for('team_admin.index',
+                                                team_id=team.id)
+                                                }}">Administration home</a></li>
+                                        <li class="{% if page.sub == 'edit' %}active {%-endif%}">
+                                        <a href="{{ url_for('teams.show',
+                                            team_id=team.id, action='edit')
+                                            }}">Edit my team</a></li>
+                                    {%- endif -%}
+                                {%- endif -%}
+                            </ul>
+                        </div>
+                    </div>
+                {%- endif %}
+
+                <div class="span9">
+                    {%- for category, message in get_flashed_messages(with_categories=true) %}
+                    <div class="alert alert-{{ category }}">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            {% if category == 'error' %}
+                                <strong>Uh oh!</strong>
+                            {% elif category == 'success' %}
+                                <strong>Hooray!</strong>
+                            {% elif category == 'info' %}
+                                <strong>Yo!</strong>
+                            {% endif %}
+                            {{ message }}
+                        </div>
+                    {%- endfor %}
+
+                    {% block body %}{% endblock %}
+                </div>
+            </div>
+
+            <hr/>
+            <div class="footer">
+                <p>&copy; 2010-2013 tardyrush.com.  All rights reserved.  <a
+                    href="http://steampowered.com">Powered By Steam.</a></p>
             </div>
         </div>
-    {%- elif page.top == 'my_teams' %}
-        <div class="grid_12 alpha omega" id="tabmenu">
-            <div>
-            <ul>
-                <li class="{% if page.sub == 'all_my' %}selected {%-endif%}
-                first">
-                    <a href="{{ url_for('teams.show',team_id=team.id)
-                    }}">{{team.name}}</a></li>
-                <li class="{% if page.sub == 'matches' %}selected {%-endif%}">
-                    <a href="{{ url_for('teams.matches', team_id=team.id)
-                    }}">Matches</a></li>
-                <li class="{% if page.sub == 'player_stats' %}selected {%-endif%}">
-                    <a href="{{ url_for('teams.stats', team_id=team.id)
-                    }}">Stats</a></li>
-                <li class="{% if page.sub == 'admin' %}selected {%-endif%}">
-                    <a href="{{ url_for('team_admin.index', team_id=team.id) }}">Admin</a></li>
-                <li class="{% if page.sub == 'edit' %}selected {%-endif%}">
-                    <a href="{{ url_for('teams.show', team_id=team.id,
-                    action='edit') }}">Edit</a></li>
-            </ul>
-            <br class="clear"/>
-            </div>
-        </div>
-    {%- elif page.top == 'team' %}
-        <div class="grid_12 alpha omega" id="tabmenu">
-            <div>
-            <ul>
-                <li class="{% if page.sub == 'main' %}selected {%-endif%}
-                first">
-                    <a href="{{ url_for('teams.show',team_id=team.id)
-                    }}">{{team.name}}</a></li>
-                <li class="{% if page.sub == 'matches' %}selected {%-endif%}">
-                    <a href="{{ url_for('teams.matches', team_id=team.id)
-                    }}">Matches</a></li>
-                <li class="{% if page.sub == 'player_stats' %}selected {%-endif%}">
-                    <a href="{{ url_for('teams.stats', team_id=team.id)
-                    }}">Stats</a></li>
-            </ul>
-            <br class="clear"/>
-            </div>
-        </div>
-    {%- endif %}
-
-
-        <div class="grid_12">
-            {%- for category, message in get_flashed_messages(with_categories=true) %}
-              <p class="flask {{ category }}-flash">{{
-                "Error: " if category == 'error' }}{{ message }}</p>
-            {%- endfor %}
-
-            {% block body %}{% endblock %}
-        </div>
-
-    </div>
-
-    <div class="grid_12" id="footer">
-        &copy; 2010-2011 tardyrush.com.  All rights reserved.
-            <a href="http://steampowered.com">Powered By Steam.</a>
-        </p>
-    </div>
-
-</div>
-
-</body>
+    </body>
 </html>

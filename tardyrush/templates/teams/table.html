@@ -1,16 +1,22 @@
 {% extends "layout.html" %}
+{% block title %}{%- if not all_teams %}My{%endif%} Teams{% endblock %}
 {% block body %}
-<h2>{%- if not all_teams %}My{%endif%} Teams</h2>
+<div class="page-header">
+    <h1>{%- if all_teams %}All{%else%}My{%endif%} Teams</h1>
+</div>
 
 {%- for t in teams %}
     {% if loop.first -%}
-        <table>
+    <table class="table table-condensed">
+        <thead>
             <tr>
                 <th>Name</th>
                 <th>Tag</th>
                 <th>Web Site</th>
                 <th>Join Date</th>
             </tr>
+        </thead>
+        <tbody>
     {% endif -%}
         <tr>
             <td><a title="View this team's details" href="{{ url_for('teams.show', team_id=t.id) }}">{{ t.name }}</a></td>
@@ -23,6 +29,7 @@
             <td>{{ t.date_created.strftime('%B %d, %Y') }}</td>
         </tr>
     {% if loop.last -%}
+        </tbody>
         </table>
     {% endif -%}
 

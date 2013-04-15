@@ -1,36 +1,41 @@
 {% extends "layout.html" %}
-{% block title %}Create Team{% endblock %}
+{% block title %}
+{%- if adding %}Create Team{%else%}Edit Team{%endif%}
+{% endblock %}
 {% block teamname %}
     {{team.name}}
 {% endblock %}
 {% block body %}
-  <h2>{%- if adding %}Create Team{%else%}Edit Team{%endif%}</h2>
-
-    {% if form.errors %}
-        <p>Uh oh! Please fix the errors below and try again.</p>
-    {% endif %}
+<div class="page-header">
+    <h1>{{team.name}} <small>{%- if adding %}Create Team{%else%}Edit Team{%endif%}</small></h1>
+</div>
 
     <form action="" method=post>
-    {{ form.hidden_tag() }}
-    {% for field in form if not field|is_hidden_field -%}
-        {% if field.type != 'FieldList' -%}
-            <p>
-            {{ field.label }}<br/>
-            {% if field.errors -%}
-                <ul class="errors">
-                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
-                </ul>
-            {% endif -%}
-            {{ field }}
-            </p>
-        {% endif -%}
-    {% endfor -%}
+        <fieldset>
+            {{ form.hidden_tag() }}
+            {% for field in form if not field|is_hidden_field -%}
+                {% if field.type != 'FieldList' -%}
+                    <div class="control-group {% if field.errors -%} error{%-endif-%}">
+                        {{ field.label(class="control-label") }}
+                        <div class="controls">
+                            {{ field(class='span5') }}
+                            {% if field.errors|length > 1 -%}
+                                <ul class="help-block">
+                                    {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                                </ul>
+                            {% elif field.errors|length == 1 -%}
+                                <span class="help-inline">{{field.errors[0]}}</span>
+                            {% endif -%}
+                        </div>
+                    </div>
+                {% endif -%}
+            {% endfor -%}
 
-    <p>
-      <input type="submit" name="submit"
-        value="{%- if adding %}Create Team{% else %}Save Team{% endif %}"/>
-    </p>
-  </form>
+            <button type="submit" class="btn btn-primary"/>
+                {%- if adding %}Create Team{% else %}Save Team{% endif %}
+            </button>
+        </fieldset>
+    </form>
 
     {% if not adding -%}
     <form action="" method=post>
@@ -38,50 +43,59 @@
     {{ players_form.hidden_tag() }}
     {% for field in players_form if not field|is_hidden_field -%}
         {% if field.type == 'FieldList' %}
-            <h2>Edit Players</h2>
-            <table>
+        <h2>Edit Players</h2>
+        <div class="span5 flush-left">
+        <table class="table">
+            <thead>
             <tr>
             <th>Player</th>
             <th>Status</th>
             <th>Delete?</th>
             </tr>
+            </thead>
+            <tbody>
             {% for f in field %}
                 {% if f.type == 'FormField' %}
                     <tr>
-                    <td>{{ players[f['user_id'].data] }}
-                    {{ f.user_id }}
-                    </td>
-                    <td>
-                    {% if f.status.disabled %}
-                        {{ f.status(disabled='disabled') }}
-                    {% else %}
-                        {{ f.status }}
-                    {% endif -%}</td>
-                    <td>
-                    {% if f['delete'].disabled %}
-                        {{ f.delete(disabled="disabled") }}
-                    {% else %}
-                        {{ f.delete }}
-                    {% endif -%}
-                    </td>
+                        <td>
+                            {{ players[f['user_id'].data] }} {{ f.user_id }}
+                        </td>
+                        <td>
+                            {% if f.status.disabled %}
+                                {{ f.status(class="input-small", disabled='disabled') }}
+                            {% else %}
+                                {{ f.status(class="input-small") }}
+                            {% endif -%}
+                        </td>
+                        <td>
+                            <label class="checkbox inline">
+                            {% if f['delete'].disabled %}
+                                {{ f.delete(disabled="disabled") }}
+                            {% else %}
+                                {{ f.delete }}
+                            {% endif -%}
+                            </label>
+                        </td>
                     </tr>
                 {% endif -%}
             {% endfor %}
+            </tbody>
             </table>
+        </div>
         {% endif -%}
     {% endfor -%}
-
-    <p>
-      <input type="submit" name="submit" class="btn"
-        value="Save Players"/>
-    </p>
-    </form>
+        <div class="clearfix"></div>
+        <button type="submit" class="btn btn-primary">Save Players</button>
+        </form>
     {% endif -%}
 
-  {% if team_id %}
+    {% if team_id %}
+    <div class="clearfix"></div>
+    <div>
   <h2>Delete Team</h2>
   <form action="{{url_for('teams.show',team_id=team_id,action='delete')}}" method="post">
-    <input type="submit" name="delete" value="Delete Team"/>
+      <button type="submit" class="btn btn-danger">Delete Team</button>
   </form>
+    </div>
   {% endif %}
 {% endblock %}

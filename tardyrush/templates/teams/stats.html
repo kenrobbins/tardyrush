@@ -21,16 +21,16 @@ $(document).ready(function(){
 {% endblock %}
 
 {% macro stats_header(stats, phash, is_total) %}
-    <table class="team_player_stats">
+    <table class="table table-condensed table-striped team_player_stats">
     <thead>
     <tr>
     <th>Player</th>
     <th>Matches<br/>Played</th>
     <th>Match<br/>Record</th>
-    <th>Matches<br/>KDR &gt;= 1</th>
+    <th>Matches<br/><abbr class="initialism" title="Kill to Death Ratio">KDR</abbr> &gt;= 1</th>
     <th>Kills</th>
     <th>Deaths</th>
-    <th><acronym title="Kill to Death Ratio">KDR</acronym></th>
+    <th><abbr class="initialism" title="Kill to Death Ratio">KDR</abbr></th>
     {%- if game.uses_stats_column('offobjs') -%}
         <th>Offensive<br/>Objectives</th>
     {%- endif -%}
@@ -48,7 +48,7 @@ $(document).ready(function(){
     {%- endif -%}
     </tr>
     </thead>
-  
+
     <tbody>
     {% for s in stats %}
         {% if s.user_id in phash %}
@@ -83,34 +83,40 @@ $(document).ready(function(){
     </table>
 {% endmacro %}
 
+{% block title %}{{team.name}} - Stats{% endblock %}
+
 {% block body %}
 
-    <h2>Stats</h2>
+<div class="page-header">
+    <h1>{{team.name}} <small>Stats</small></h1>
+</div>
 
-    <h3>{{ game.name }}</h3>
+    <h2>{{ game.name }}</h2>
 
-    <p id="stats_view_all">
-    <a {% if grouper == 'competition' %}class='selected_view'{% endif %} 
-    href="{{ url_for('teams.stats', team_id=team.id, game=game.id, 
-    grouper='competition') }}">View All Competitions</a> /
-    <a {% if grouper == 'gametype' %}class='selected_view'{% endif %} 
-    href="{{ url_for('teams.stats', team_id=team.id, game=game.id,
-    grouper='gametype') }}">View All Game Types</a> /
-    <a {% if grouper == 'map' %}class='selected_view'{% endif %} 
-    href="{{ url_for('teams.stats', team_id=team.id, game=game.id,
-    grouper='map') }}">View All Maps</a>
-    </p>
+    <ul class="nav nav-pills">
+        <li {% if grouper == 'competition' %}class='active'{% endif %}>
+            <a href="{{ url_for('teams.stats', team_id=team.id, game=game.id,
+                grouper='competition') }}">View All Competitions</a>
+        </li>
+        <li {% if grouper == 'gametype' %}class='active'{% endif %}>
+            <a href="{{ url_for('teams.stats', team_id=team.id, game=game.id,
+                grouper='gametype') }}">View All Game Types</a>
+        </li>
+        <li {% if grouper == 'map' %}class='active'{% endif %}>
+            <a href="{{ url_for('teams.stats', team_id=team.id, game=game.id,
+                grouper='map') }}">View All Maps</a>
+        </li>
+    </ul>
 
-    <form method='get' 
+    <form method='get' class="form-inline"
     action="{{url_for('teams.combined_stats', team_id=team.id)}}">
     <input type="hidden" name="game" value="{{game.id}}"/>
-    Combine options:
 
     {% for field in combine_form if not field|is_hidden_field -%}
         {{ field }}
     {% endfor -%}
 
-    <input type="submit" value="Go"/>
+    <button type="submit" class="btn">Go</button>
     </form>
 
     <h3>
@@ -140,7 +146,7 @@ $(document).ready(function(){
         </h3>
 
         {{ stats_header(group.list, phash, false) }}
-      
+
         </table>
     {% endfor %}
 

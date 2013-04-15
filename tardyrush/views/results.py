@@ -21,8 +21,8 @@ results = Module(__name__)
 @results.route('/results/<int:cmatch_id>/<action>/', methods=('GET','POST'))
 @require_login(page={'top':'my_matches','sub':'previous'})
 def add(cmatch_id, action):
-    if not is_team_leader():
-        flash(u'You must be a team leader to add results.')
+    if not g.user.is_team_leader():
+        flash(u'You must be a team leader to add results.', 'error')
         return redirect(url_for('matches.my_matches'))
 
     if cmatch_id > 0:
@@ -31,48 +31,55 @@ def add(cmatch_id, action):
 
         corr_match = CompletedMatch.query.filter_by(id=cmatch_id).first()
         if not corr_match:
-            flash(u'Results not found.')
+            flash(u"That result doesn't exist.", "error")
             return redirect(url_for('matches.my_matches'))
     else:
         cmatch_id = 0
         adding = True
         corr_match_id = request.values.get('match_id')
         corr_match = Match.query.filter_by(id=corr_match_id).\
-                filter(Match.team_id.in_(g.team_leader_teams)).first()
+                filter(Match.team_id.in_(g.user.team_leader_teams)).first()
 
         if not corr_match:
-            flash(u'Corresponding availability match not found.')
+            flash(u'Corresponding availability match not found.', 'error')
             return redirect(url_for('matches.my_matches'))
 
         if corr_match.date > datetime.datetime.utcnow():
-            flash(u'Cannot add results to match in the future.')
+            flash(u'Cannot add results to match in the future.', 'error')
             return redirect(url_for('matches.my_matches'))
 
         if len(corr_match.results):
-            flash(u'Results have already been added.')
+            flash(u'Results have already been added.', 'error')
             return redirect(url_for('add',
                 cmatch_id=corr_match.results[0].id,
                 action='edit'))
 
     opponents = Opponent.query.\
-            filter(Opponent.team_id.in_(g.team_leader_teams)).\
+            filter(Opponent.team_id.in_(g.user.team_leader_teams)).\
             order_by(Opponent.name.asc()).all()
 
     servers = Server.query.\
-            filter(Server.team_id.in_(g.team_leader_teams)).\
+            filter(Server.team_id.in_(g.user.team_leader_teams)).\
             order_by('server_name')
 
     if not adding:
         form = CompletedMatchForm(request.form, obj=corr_match)
         if request.method == 'GET':
-            form.date_played.data = to_user_timezone(corr_match.date_played)
+            tz = to_user_timezone(corr_match.date_played)
+            form.date_played.data = tz
+            form.date_played.label.text += \
+                    ' (in %s)' % format_datetime(tz, 'zzzz')
     else:
         form = CompletedMatchForm()
         if request.method == 'GET':
-            form.date_played.data = to_user_timezone(corr_match.date)
+            tz = to_user_timezone(corr_match.date)
+            form.date_played.data = tz
+            form.date_played.label.text += \
+                    ' (in %s)' % format_datetime(tz, 'zzzz')
 
     form.match_id.data = int(corr_match_id)
-    form.team_id.choices = [ (corr_match.team_id, g.teams[corr_match.team_id]) ]
+    form.team_id.choices = [ (corr_match.team_id,
+                              g.user.teams[corr_match.team_id].name) ]
     form.competition_id.choices = [ (corr_match.competition.id,
         corr_match.competition.name) ]
     form.server_id.choices = [ (corr_match.server.id,
@@ -87,7 +94,7 @@ def add(cmatch_id, action):
 
     #cutoff = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
     #recent_matches = Match.query.\
-    #        filter(Match.team_id.in_(g.team_leader_teams)).\
+    #        filter(Match.team_id.in_(g.user.team_leader_teams)).\
     #        filter(Match.date < cutoff).\
     #        order_by(Match.date.desc()).all()
 
@@ -116,7 +123,6 @@ def add(cmatch_id, action):
 
     if adding and request.method == 'GET':
         form.rounds.append_entry()
-        form.rounds.append_entry()
 
     for e in form.rounds.entries:
         e.map_id.choices = map_choices
@@ -125,18 +131,17 @@ def add(cmatch_id, action):
 
         if adding and request.method == 'GET':
             e.players.append_entry()
-            e.players.append_entry()
-            e.players.append_entry()
-            e.players.append_entry()
 
         for ep in e.players.entries:
             ep.user_id.choices = player_choices
 
+    forfeit_result = request.values.get('forfeit_result')
+
     if form.validate_on_submit():
-        if not is_team_leader(form.team_id.data):
-            flash(u'Invalid team')
-        elif not len(form.rounds):
-            flash(u'Invalid rounds')
+        if not g.user.is_team_leader(form.team_id.data):
+            flash(u'Invalid team', 'error')
+        elif not len(form.rounds) and not forfeit_result:
+            flash(u'Invalid rounds', 'error')
         else:
             error = False
 
@@ -157,11 +162,11 @@ def add(cmatch_id, action):
             cmatch.date_played = date
             cmatch.comments = form.comments.data
 
-            if request.values.get('forfeit_result') in ('1', '0'):
+            if forfeit_result in ('1', '0'):
                 cmatch.final_result_method = CompletedMatch.FinalResultByForfeit
                 cmatch.draws = 0
 
-                if request.values.get('forfeit_result') == '1':
+                if forfeit_result == '1':
                     cmatch.wins = 1
                     cmatch.losses = 0
                 else:
@@ -173,7 +178,7 @@ def add(cmatch_id, action):
 
                 db.session.commit()
 
-                flash(u'The results were successfully saved.')
+                flash(u'The results were successfully saved.', 'success')
                 return redirect(url_for('matches.my_previous_matches'))
 
             else:
@@ -207,7 +212,7 @@ def add(cmatch_id, action):
                 db.session.flush()
 
                 if not len(r.players):
-                    flash(u'No players found')
+                    flash(u'No players found', 'error')
                     error = True
                     break
 
@@ -228,7 +233,7 @@ def add(cmatch_id, action):
                         errmsg = u'You have duplicate players in round %d. ' %\
                                 round_num
                         errmsg += 'A player may appear in a round only once.'
-                        flash(errmsg)
+                        flash(errmsg, 'error')
                         error = True
                         break
 
@@ -262,26 +267,27 @@ def add(cmatch_id, action):
             else:
                 db.session.commit()
 
-                flash(u'The results were successfully saved.')
+                flash(u'The results were successfully saved.', 'success')
                 return redirect(url_for('matches.my_previous_matches'))
 
-    return rt('results/form.html', 
+    return rt('results/form.html',
             page={'top':'my_matches', 'sub':'previous'},
             adding=adding,
             player_choices=player_choices,
             map_choices=map_choices,
             side_choices=side_choices,
             gametype_choices=gametype_choices,
+            corr_match=corr_match,
             form=form)
 
 @results.route('/results/<int:cmatch_id>/')
 def show(cmatch_id):
     cmatch = CompletedMatch.query.filter_by(id=cmatch_id).first()
     if not cmatch:
-        flash(u'Match not found')
+        flash(u'Match not found', 'error')
         return redirect('show_all')
 
-    if cmatch.team_id in g.teams:
+    if g.user.is_on_team(cmatch.team_id):
         page={'top':'my_matches','sub':'previous'}
     else:
         page={'top':'matches','sub':'previous'}
@@ -301,7 +307,7 @@ def show(cmatch_id):
             def_objs[p.user_id] += p.def_objs
             score[p.user_id] += p.score
 
-    return rt('results/single.html', 
+    return rt('results/single.html',
             page=page,
             players=players,
             kills=kills,

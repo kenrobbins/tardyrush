@@ -1,8 +1,8 @@
-from wtforms.widgets import Input
+from wtforms.widgets import HTMLString
 from datetime import datetime, timedelta
 
-class MatchDateTimeInput(Input):
-    MonthOptions = [ 
+class MatchDateTimeWidget(object):
+    MonthOptions = [
             ( 1, u'January'),
             ( 2, u'February'),
             ( 3, u'March'),
@@ -21,21 +21,30 @@ class MatchDateTimeInput(Input):
     AmpmOptions = [ ('am', 'am'), ('pm', 'pm') ]
 
     def __init__(self, *args, **kwargs):
-        super(MatchDateTimeInput, self).__init__(*args, **kwargs)
+        pass
 
     def __call__(self, field, **kwargs):
         if not field.data:
             field.data = datetime.utcnow() + timedelta(hours=1)
 
+        class_ = kwargs.get('class', '')
+        date_class = kwargs.get('date_class', '')
+        time_class = kwargs.get('time_class', '')
+
+        date_class = "%s %s" % (class_, date_class)
+        time_class = "%s %s" % (class_, time_class)
+
+        date_class_full = 'class="%s"' % date_class
+        time_class_full = 'class="%s"' % time_class
+
         html = []
 
-        html.append( "<input class='date' name='%s' size='9' " % field.name )
-        html.append( " maxlength='10' value='%02d/%02d/%s' />" % (field.data.month,
+        html.append( "<input type='text' id='%s' name='%s' class='date %s'" %
+                (field.name, field.name, date_class))
+        html.append( " maxlength='10' value='%02d/%02d/%04d' />" % (field.data.month,
             field.data.day, field.data.year) )
 
-        html.append("<span class='matchdate_between'></span>")
-
-        html.append( "<select name='%s'>" % field.name )
+        html.append( "<select name='%s' %s>" % (field.name, time_class_full))
         for (val, text) in self.HourOptions:
             if val == field.data.hour or val == (field.data.hour - 12):
                 sel = "selected='selected'"
@@ -44,7 +53,7 @@ class MatchDateTimeInput(Input):
             html.append( "<option %s value='h%s'>%s</option>" % (sel, val, text) )
         html.append("</select>")
 
-        html.append( "<select name='%s'>" % field.name )
+        html.append( "<select name='%s' %s>" % (field.name, time_class_full))
         for (val, text) in self.MinuteOptions:
             if val == field.data.minute:
                 sel = "selected='selected'"
@@ -53,7 +62,7 @@ class MatchDateTimeInput(Input):
             html.append( "<option %s value='m%s'>%s</option>" % (sel, val, text) )
         html.append("</select>")
 
-        html.append( "<select name='%s'>" % field.name )
+        html.append( "<select name='%s' %s>" % (field.name, time_class_full))
         for (val, text) in self.AmpmOptions:
             if val == 'pm' and field.data.hour >= 12:
                 sel = "selected='selected'"
@@ -62,4 +71,4 @@ class MatchDateTimeInput(Input):
             html.append( "<option %s value='%s'>%s</option>" % (sel, val, text) )
         html.append("</select>")
 
-        return u''.join(html)
+        return HTMLString(''.join(html))

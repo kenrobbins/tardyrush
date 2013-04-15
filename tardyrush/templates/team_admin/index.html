@@ -1,38 +1,48 @@
 {% extends "layout.html" %}
+{% block title %}
+{{team.name}} - Team Administration
+{% endblock %}
 {% block body %}
-<h2>Administration</h2>
+<div class="page-header">
+    <h1>{{team.name}} <small>Administration</small></h1>
+</div>
 
-    <div id="opponents_table">
-    <h3>Opponents</h3>
+    <div class="span5 flush-left">
+    <h2>Opponents</h2>
 
-    <p><a href="{{url_for('add_opponent', team_id=team.id)}}">Add
-    Opponent</a></p>
-
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Tag</th>
-        </tr>
-        {%- for o in opponents %}
+    <table class="table table-condensed">
+        <thead>
             <tr>
-                <td><a href="{{
-                url_for('opponent',team_id=team.id,opponent_id=o.id,action='edit') }}">{{ o.name }}</a></td>
-                <td>{{ o.tag }}</td>
+                <th>Name</th>
+                <th>Tag</th>
             </tr>
-        {%- endfor %}
+        </thead>
+        <tbody>
+            {%- for o in opponents %}
+                <tr>
+                    <td><a href="{{
+                    url_for('opponent',team_id=team.id,opponent_id=o.id,action='edit') }}">{{ o.name }}</a></td>
+                    <td>{{ o.tag }}</td>
+                </tr>
+            {%- endfor %}
+        </tbody>
     </table>
     </div>
+    <div class="clearfix"></div>
+    <div>
+        <a class="btn" href="{{url_for('add_opponent', team_id=team.id)}}">Add Opponent</a>
+    </div>
 
-
-    <div id="servers_table">
-    <h3>Servers</h3>
-    <p><a href="{{url_for('add_server', team_id=team.id)}}">Add
-    Server</a></p>
-    <table>
+    <div class="span5 flush-left">
+    <h2>Servers</h2>
+    <table class="table table-condensed">
+        <thead>
         <tr>
             <th>Name</th>
             <th>Address</th>
         </tr>
+        </thead>
+        <tbody>
         {%- for s in servers %}
             <tr>
                 <td><a
@@ -40,18 +50,19 @@
                 <td>{{ s.address }}</td>
             </tr>
         {%- endfor %}
+        </tbody>
     </table>
     </div>
+    <div class="clearfix"></div>
+    <div>
+    <a class="btn" href="{{url_for('add_server', team_id=team.id)}}">Add Server</a>
+    </div>
 
+    <div>
+    <h2>Forum Helpers</h2>
 
-    <div id="forum_bots_table">
-
-    <h3>Forum Bots</h3>
-
-    <p><a href="{{url_for('add_forum_bot', team_id=team.id)}}">Add
-    Forum Bot</a></p>
-
-    <table>
+    <table class="table table-condensed">
+        <thead>
         <tr>
             <th>#</th>
             <th>Type</th>
@@ -61,12 +72,14 @@
             <th>Password</th>
             <th>Post when a match<br />from this game is added</th>
         </tr>
+        </thead>
+        <tbody>
         {%- for s in forum_bots %}
             <tr>
                 <td><a
                 href="{{url_for('forum_bot',team_id=team.id,forum_bot_id=s.id,action='edit')}}">{{
                 s.id }}</a></td>
-                <td>{{ s.type|pretty_forum_bot_type }}</td>
+                <td>{{ s.pretty_type }}</td>
                 <td>{{ s.url }}</td>
                 <td>{{ s.forum_id }}</td>
                 <td>{{ s.user_name }}</td>
@@ -78,6 +91,12 @@
                 {%- endif -%}
             </tr>
         {%- endfor %}
+        </tbody>
     </table>
     </div>
+    <div class="clearfix"></div>
+    <div>
+    <a class="btn" href="{{url_for('add_forum_bot', team_id=team.id)}}">Add Forum Helper</a>
+    </div>
+
 {% endblock %}

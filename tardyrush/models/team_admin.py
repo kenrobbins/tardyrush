@@ -25,7 +25,7 @@ class Server(db.Model):
             cascade="delete")
     team = db.relation("Team", primaryjoin="Team.id == Server.team_id")
 
-    __table_args__  = ( db.UniqueConstraint("team_id", "server_name"), {} ) 
+    __table_args__  = ( db.UniqueConstraint("team_id", "server_name"), {} )
 
 class ServerForm(Form):
     name = StrippedTextField(u'Server Name', \
@@ -46,7 +46,7 @@ class Opponent(db.Model):
             primaryjoin=Match.opponent_id == id, cascade="delete")
     team = db.relation("Team", primaryjoin="Team.id == Opponent.team_id")
 
-    __table_args__  = ( db.UniqueConstraint("team_id", "opponent_name"), {} ) 
+    __table_args__  = ( db.UniqueConstraint("team_id", "opponent_name"), {} )
 
 class OpponentForm(Form):
     name = StrippedTextField(u'Opponent Name', \
@@ -80,6 +80,10 @@ class ForumBot(db.Model):
 
     team = db.relation("Team", primaryjoin="Team.id == ForumBot.team_id")
     game = db.relation("Game", primaryjoin="Game.id == ForumBot.game_id")
+
+    @property
+    def pretty_type(self):
+        return self.__class__.TypePrettyNames.get(self.type, "")
 
 class ForumBotForm(Form):
     type = SelectField(u'Forum Type', coerce=int, choices=ForumBot.TypeChoices)

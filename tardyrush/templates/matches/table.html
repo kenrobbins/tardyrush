@@ -1,23 +1,42 @@
 {% extends "layout.html" %}
+
+{% block title %}
+{% if team %}{{team.name}} -{%endif%}
+{% if previous_only %}
+Past Matches
+{% else %}
+All Matches
+{% endif %}
+{% endblock %}
+
 {% block body %}
-  {% if previous_only %}
-  <h2>Previous Matches</h2>
-  {% else %}
-  <h2>All Matches</h2>
-  {% endif %}
+<div class="page-header">
+    <h1>
+        {% if team %}{{team.name}} <small>{% endif %}
+        {% if previous_only %}
+        Past Matches
+        {% else %}
+        All Matches
+        {% endif %}
+        {% if team %}</small>{% endif %}
+    </h1>
+</div>
 
   {% macro matches_table(results, title, matches) %}
-    {% if title and matches|count %}<h3>{{ title }}</h3>{% endif %}
+    {% if title and matches|count %}<h2>{{ title }}</h2>{% endif %}
       {%- for m in matches %}
         {% if loop.first -%}
-        <table>
-          <tr>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Teams</th>
-            <th>Competition</th>
-            {% if results %}<th>Results</th>{% endif %}
-          </tr>
+        <table class="table table-condensed">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Teams</th>
+                <th>Competition</th>
+                {% if results %}<th>Results</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
         {% endif -%}
           <tr>
             <td>{{ m.date|matches_date_format }}</td>
@@ -32,7 +51,7 @@
                     <a href="{{url_for('results.show',
                     cmatch_id=r.id)}}">
                     {% set f = '' %}
-                    {% if r.final_result_method|is_forfeit %}
+                    {% if r.is_forfeit %}
                         {% set f = 'Forfeit ' %}
                     {% endif %}
                     {% if r.wins > r.losses %}
@@ -42,8 +61,8 @@
                     {% else %}
                         <strong class="res_draw">Draw</strong>
                     {% endif %}
-                    {% if not r.final_result_method|is_forfeit %}
-                        ({{ r.wins }} - 
+                    {% if not r.is_forfeit %}
+                        ({{ r.wins }} -
                         {{ r.losses }}
                         {%- if r.draws %}
                             - {{ r.draws }}
@@ -51,8 +70,9 @@
                     {%- endif -%}
                     </a>
                 {% else %}
-                    {% if m.team_id|can_edit_team %}
-                        <a class="add_results" href="{{ url_for('results.add', match_id=m.id) }}">Add Results</a>
+                    {% if g.user.can_edit_team(m.team_id) %}
+                        <a href="{{ url_for('results.add', match_id=m.id)
+                            }}">Add Results <i class="icon-plus-sign"></i></a>
                     {% endif %}
                 {% endif %}
                 </td>
@@ -60,6 +80,7 @@
           </tr>
 
         {% if loop.last -%}
+        </tbody>
         </table>
         {% endif -%}
       {% endfor -%}
@@ -69,14 +90,14 @@
       {{ matches_table(True, None, previous) }}
   {% else %}
       {{ matches_table(False, "Upcoming Matches", upcoming) }}
-      {{ matches_table(True, "Previous Matches", previous) }}
+      {{ matches_table(True, "Past Matches", previous) }}
   {% endif %}
 
   {%- if not upcoming|count and not previous|count %}
 
   <p>No matches here!
-  {% if g.user %}
-      {% if g.is_admin %}
+  {% if not g.user.is_guest %}
+      {% if g.user.is_admin %}
       Why don't you <a href="{{url_for('matches.add')}}">add some</a>?
       {% else %}
       Ask your team leaders to add some.

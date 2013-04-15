@@ -2,9 +2,9 @@
 {% import 'helpers/forms.html' as forms %}
 {% block body %}
     {% if adding %}
-        {{ forms.server(form, team.id) }}
+        {{ forms.server(form, team) }}
     {% else %}
-        {{ forms.server(form, team.id, server_id) }}
+        {{ forms.server(form, team, server_id) }}
     {% endif %}
 
     {% if server_id %}
@@ -12,12 +12,10 @@
     <form method="post" action="{{url_for('server',team_id=team.id,
     server_id=server_id, action='delete')}}">
     <p>
-        Are you sure?  This will remove matches scheduled with this
-        server.
+    <span class="label label-important">Careful!</span>
+    This will remove all matches and results on this server.
     </p>
-    <p>
-        <input type="submit" name="submit" value="Delete Server"/>
-    </p>
+    <button type="submit" class="btn btn-danger">Delete Server</button>
     </form>
     {% endif %}
 {% endblock %}

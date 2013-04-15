@@ -27,21 +27,21 @@ matches = Module(__name__)
 @matches.route('/match/add/', methods=('GET','POST'))
 @require_login(page={'top':'my_matches','sub':'add_match'})
 def add():
-    if not is_team_leader():
-        flash(u'You must be a team leader to add a match.')
+    if not g.user.is_team_leader():
+        flash(u'You must be a team leader to add a match.', 'error')
         return redirect(url_for('my_matches'))
 
     opponents = Opponent.query.\
-            filter(Opponent.team_id.in_(g.team_leader_teams)).\
+            filter(Opponent.team_id.in_(g.user.team_leader_teams)).\
             order_by(Opponent.name.asc()).all()
 
     servers = Server.query.\
-            filter(Server.team_id.in_(g.team_leader_teams)).\
+            filter(Server.team_id.in_(g.user.team_leader_teams)).\
             order_by('server_name')
     competitions = Competition.query.order_by('competition_name')
 
     form = AddMatchForm()
-    form.team_id.choices = [ (t, g.teams[t]) for t in g.team_leader_teams ]
+    form.team_id.choices = [ (t, g.user.teams[t].name) for t in g.user.team_leader_teams ]
     form.competition_id.choices = [(c.id, c.name) for c in competitions ]
     form.server_id.choices = [ (s.id, s.name) for s in servers ]
     form.opponent_id.choices = [ (o.id, o.name) for o in opponents ]
@@ -58,10 +58,12 @@ def add():
                         + datetime.timedelta(days=1))\
                         .date(),\
                     datetime.time(21))
+        form.date.label.text += ' (in %s)' \
+                % format_datetime(form.date.data, 'zzzz')
 
     if form.validate_on_submit():
-        if not is_team_leader(form.team_id.data):
-            flash(u'Invalid team')
+        if not g.user.is_team_leader(form.team_id.data):
+            flash(u'You must be a team leader to add a match.', 'error')
         else:
             date = to_utc(form.date.data)
             match = Match(team_id=form.team_id.data,
@@ -76,17 +78,17 @@ def add():
             db.session.commit()
 
             team_date = matches_datetime_format_full_for_team(date, \
-                    g.teams_time_zones[form.team_id.data])
-           
+                    g.user.teams[form.team_id.data].time_zone)
+
             date_short = matches_datetime_format(date)
             team_date_short = matches_datetime_format_for_team(date, \
-                    g.teams_time_zones[form.team_id.data])
+                    g.user.teams[form.team_id.data].time_zone)
 
             email_vars = { 'date' : matches_datetime_format_full(date),
                            'team_date' : team_date,
                            'date_short' : date_short,
                            'team_date_short' : team_date_short,
-                           'team' : g.teams[form.team_id.data],
+                           'team' : g.user.teams[form.team_id.data].name,
                            'opponent' : match.opponent.name,
                            'opponent_tag' : match.opponent.tag,
                            'competition' : match.competition.name,
@@ -168,17 +170,17 @@ def add():
                 db.session.add(forum_post)
                 db.session.commit()
 
-            flash(u'The match was successfully added.')
+            flash(u'The match was successfully added.', 'success')
             return redirect(url_for('my_matches'))
 
     oform = OpponentForm()
     sform = ServerForm()
     tzform = UserTimeZoneForm(obj=g.user)
 
-    return rt('matches/form.html', 
+    return rt('matches/form.html',
             page={'top':'my_matches', 'sub':'add_match'},
             adding=True,
-            team_id=g.team_leader_teams[0],
+            team_id=g.user.team_leader_teams[0],
             user_now=to_user_timezone(datetime.datetime.utcnow()),
             tzform=tzform,
             oform=oform,
@@ -191,21 +193,21 @@ def add():
 def show(match_id, action):
     match = Match.query.filter_by(id=match_id).first()
     if not match:
-        flash(u'Match not found')
+        flash(u"That match doesn't exist.", "error")
         return redirect(url_for('my_matches'))
 
-    if match.team_id not in g.teams:
-        flash(u'You must be on this team to view this match.')
-        return redirect(url_for('my_matches'))
+    if not g.user.is_on_team(match.team_id):
+        flash(u'You must be on the team to view its match availability.', "error")
+        return redirect(url_for('all'))
 
     if match.date < datetime.datetime.utcnow():
         up_prev = 'previous'
     else:
         up_prev = 'upcoming'
- 
+
     if action == 'edit':
-        if not is_team_leader(match.team_id):
-            flash(u'You must be a team leader to edit this match.')
+        if not g.user.is_team_leader(match.team_id):
+            flash(u'You must be a team leader to edit this match.', 'error')
             return redirect(url_for('my_matches'))
 
         servers = Server.query.\
@@ -216,7 +218,7 @@ def show(match_id, action):
         form.competition_id.choices = [(c.id, c.name) for c in
                 Competition.query.order_by('competition_name')]
         form.server_id.choices = [ (s.id, s.name) for s in servers ]
-        form.team_id.choices = [ (t, g.teams[t]) for t in g.team_leader_teams ]
+        form.team_id.choices = [ (t, g.user.teams[t].name) for t in g.user.team_leader_teams ]
         form.opponent_id.choices = [ (o.id, o.name) for o in \
                 Opponent.query.filter_by(team_id=match.team_id).\
                 order_by(Opponent.name.asc()).all() ]
@@ -232,6 +234,8 @@ def show(match_id, action):
                 form.server_id.data = int(request.values.get('new_server_id'))
 
             form.date.data = to_user_timezone(form.date.data)
+            form.date.label.text += ' (in %s)' \
+                    % format_datetime(form.date.data, 'zzzz')
 
         if form.validate_on_submit():
             form.date.data = to_utc(form.date.data)
@@ -249,7 +253,7 @@ def show(match_id, action):
                         filter(MatchPlayer.user_id.in_(to_delete)).delete(False)
 
             db.session.commit()
-            flash(u'Match was successfully updated')
+            flash(u'The match was successfully updated.', 'success')
 
             if request.values.get('from') == 'single':
                 return redirect(url_for('show', match_id=match_id))
@@ -260,7 +264,7 @@ def show(match_id, action):
         sform = ServerForm()
         tzform = UserTimeZoneForm(obj=g.user)
 
-        return rt('matches/form.html', form=form, players=players, 
+        return rt('matches/form.html', form=form, players=players,
                 page={'top':'my_matches', 'sub':up_prev},
                 when=up_prev,
                 adding=False,
@@ -268,26 +272,26 @@ def show(match_id, action):
                 tzform=tzform,
                 oform=oform,
                 sform=sform,
-                team_id=g.team_leader_teams[0],
+                team_id=g.user.team_leader_teams[0],
                 match_id=match.id)
     elif action == 'delete':
-        if not is_team_leader(match.team_id):
-            flash(u'You must be a team leader to edit this match.')
+        if not g.user.is_team_leader(match.team_id):
+            flash(u'You must be a team leader to edit this match.', 'error')
             return redirect(url_for('my_matches'))
 
         if request.method == 'POST':
             db.session.delete(match)
             db.session.commit()
-            flash(u'Match was successfully deleted')
+            flash(u'The match was successfully deleted.', 'success')
 
         return redirect(url_for('my_matches'))
     elif action == 'status':
-        if not is_on_current_team(match.team_id):
-            flash(u'You must be on this team to change your status.')
+        if not g.user.is_on_team(match.team_id):
+            flash(u'You must be on this team to change your status.', 'error')
             return redirect(url_for('my_matches'))
 
         if up_prev == 'previous':
-            flash(u'You cannot change your status on a past match.')
+            flash(u'You cannot change your status on a past match.', 'error')
             return redirect(url_for('my_previous_matches'))
 
         form = MatchPlayerStatusForm(request.form)
@@ -303,7 +307,7 @@ def show(match_id, action):
                 player_status = None
 
             if player_status is None:
-                flash(u'Invalid status!')
+                flash(u'That status is not valid!', 'error')
             else:
                 try:
                     mu = MatchPlayer.query.filter_by(match_id=match.id,
@@ -315,7 +319,7 @@ def show(match_id, action):
                 except Exception, e:
                     app.logger.error('Error finding MatchPlayer: %s, %s' % \
                             (g.user.id, e))
-                    flash(u'Oops! There was an error! Please try again.')
+                    flash(u'Something bad happened. Please try again.', 'error')
                     return redirect(url_for('my_matches'))
 
                 mu.date_updated = datetime.datetime.utcnow()
@@ -323,7 +327,7 @@ def show(match_id, action):
                 db.session.commit()
 
                 if request.values.get('api') == '1':
-                    psp = pretty_match_player_status(player_status)
+                    psp = mu.pretty_status
                     return jsonify(success=True,
                             csrf=form.csrf_token.data,
                             match_id=match.id,
@@ -335,7 +339,7 @@ def show(match_id, action):
                 if request.values.get('from') == 'single':
                     return redirect(url_for('show', match_id=match_id))
     else:
-        return rt('matches/single.html', 
+        return rt('matches/single.html',
                 page={'top':'my_matches','sub':up_prev},
                 when=up_prev,
                 aform = MatchPlayerStatusForm(),
@@ -346,9 +350,7 @@ def show(match_id, action):
 
 ###############
 @matches.route('/match/')
-@matches.route('/matches/')
 @matches.route('/match/upcoming/')
-@matches.route('/matches/upcoming/')
 def my_matches():
     if not g.user:
         return redirect(url_for('all'))
@@ -357,7 +359,7 @@ def my_matches():
     matches = Match.query.\
             outerjoin(CompletedMatch).\
             filter(CompletedMatch.id == None).\
-            filter(Match.team_id.in_(g.teams.keys())).\
+            filter(Match.team_id.in_(g.user.teams.keys())).\
             filter(Match.date > cutoff).\
             options(eagerload('competition'), \
                     eagerload('server')).\
@@ -365,15 +367,9 @@ def my_matches():
             order_by(Match.id.asc()).\
             all()
 
-    records = dict()
-    for match in matches:
-        if match.id not in records:
-            records[match.id] = match.get_match_records()
-
     return rt('matches/availability.html',
         page={'top':'my_matches', 'sub':'upcoming'},
         aform = MatchPlayerStatusForm(),
-        records=records,
         matches=matches)
 
 @matches.route('/match/previous/')
@@ -383,7 +379,7 @@ def my_previous_matches():
 
     cutoff = datetime.datetime.utcnow()
     matches = Match.query.\
-            filter(Match.team_id.in_(g.teams.keys())).\
+            filter(Match.team_id.in_(g.user.teams.keys())).\
             filter(Match.date <= cutoff).\
             options(eagerload('competition'), \
                     eagerload('server')).\
@@ -397,11 +393,10 @@ def my_previous_matches():
         previous=matches)
 
 @matches.route('/match/all/')
-@matches.route('/matches/all/')
 def all(team_id=0): # show all matches
     team = None
-    if team_id: 
-        if team_id not in g.teams:
+    if team_id:
+        if not g.user.is_on_team(team_id):
             team = Team.query.filter_by(id=team_id).first()
 
             if not team:
@@ -409,7 +404,7 @@ def all(team_id=0): # show all matches
 
             page = {'top':'team', 'sub':'matches'}
         else:
-            team = {'id' : team_id, 'name' : g.teams[team_id]}
+            team = {'id' : team_id, 'name' : g.user.teams[team_id].name}
             page = {'top':'my_teams', 'sub':'matches'}
 
         matches=Match.query.\

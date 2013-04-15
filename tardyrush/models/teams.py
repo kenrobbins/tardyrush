@@ -76,9 +76,12 @@ class TeamPlayer(db.Model):
         self.user_id = kwargs['user_id']
         self.status = kwargs['status']
 
+    @property
+    def pretty_status(self):
+        return self.__class__.StatusPrettyNames.get(self.status, "")
+
     def is_team_leader(self):
-        return self.status == self.StatusLeader or \
-                self.status == self.StatusFounder
+        return self.status in (self.StatusLeader, self.StatusFounder)
 
     def is_founder(self):
         return self.status == self.StatusFounder

@@ -100,20 +100,20 @@ function add_results_player(round) {
     var player = $('#round_players_table_' + round + ' tr').length - 1;
 
     var pid = "rounds-" + round + "-players-" + player + "-user_id";
-    var p = "<td><select name='"+pid+"' id='"+pid+"'>" + player_options 
+    var p = "<td><select name='"+pid+"' id='"+pid+"'>" + player_options
         + "</select></td>";
-    var k = "<td><input type='text' size='4' name='rounds-" + round + "-players-" + 
+    var k = "<td><input class='span1' type='text' size='4' name='rounds-" + round + "-players-" +
         player + "-kills' value='0' /></td>";
-    var d = "<td><input type='text' size='4' name='rounds-" + round + "-players-" + 
+    var d = "<td><input class='span1' type='text' size='4' name='rounds-" + round + "-players-" +
         player + "-deaths' value='0' /></td>";
-    var oo = "<td><input type='text' size='4' name='rounds-" + round + "-players-" + 
+    var oo = "<td><input class='span1' type='text' size='4' name='rounds-" + round + "-players-" +
         player + "-off_objs' value='0' /></td>";
-    var de = "<td><input type='text' size='4' name='rounds-" + round + "-players-" + 
+    var de = "<td><input class='span1' type='text' size='4' name='rounds-" + round + "-players-" +
         player + "-def_objs' value='0' /></td>";
-    var s = "<td><input type='text' size='4' name='rounds-" + round + "-players-" + 
+    var s = "<td><input class='span1' type='text' size='4' name='rounds-" + round + "-players-" +
         player + "-score' value='0' /></td>";
 
-    var row = "<tr>" + p + k + d + oo + de + s + "</tr>" 
+    var row = "<tr>" + p + k + d + oo + de + s + "</tr>"
 
     $('#round_players_table_' + round).append(row);
 }
@@ -137,41 +137,50 @@ function add_results_round() {
     var rhtml = '';
     rhtml += '<div class="round" id="round_'+(round_num+1)+'">';
     rhtml += '<h3>Round ' + (round_num+1) + '</h3>';
-    rhtml += '<table class="round_map">';
+    rhtml += '<table class="table table-condensed">';
+    rhtml += '<thead>';
     rhtml += '<tr>';
     rhtml += '<th>Map</th>';
     rhtml += '<th>Side</th>';
     rhtml += '<th>Gametype</th>';
     rhtml += '</tr>';
+    rhtml += '</thead>';
+    rhtml += '<tbody>';
     rhtml += '<tr>';
     rhtml += '<td><select name="'+name_start+'map_id">'+map_options+'</select></td>';
     rhtml += '<td><select name="'+name_start+'side_id">'+side_options+'</select></td>';
     rhtml += '<td><select name="'+name_start+'gametype_id">'+gametype_options+'</select></td>';
     rhtml += '</tr>';
+    rhtml += '</tbody>';
     rhtml += '</table>';
 
-    rhtml += '<table class="round_score">';
+    rhtml += '<table class="table table-condensed">';
+    rhtml += '<thead>';
     rhtml += '<tr>';
-    rhtml += '<th>Wins<br/><span>(Points For)</span></th>';
-    rhtml += '<th>Losses<br/><span>(Points Against)</span></th>';
+    rhtml += '<th>Wins <span>(Points For)</span></th>';
+    rhtml += '<th>Losses <span>(Points Against)</span></th>';
     rhtml += '<th>Draws</th>';
     rhtml += '</tr>';
+    rhtml += '</thead>';
+    rhtml += '<tbody>';
     rhtml += '<tr>';
     rhtml += '<td><input class="round_wins_input" type="text" name="'+name_start+'wins" id="'+name_start+'wins" value="0" /></td>';
     rhtml += '<td><input class="round_losses_input" type="text" name="'+name_start+'losses" id="'+name_start+'losses" value="0" /></td>';
     rhtml += '<td><input class="round_draws_input" type="text" name="'+name_start+'draws" id="'+name_start+'draws" value="0" /></td>';
     rhtml += '</tr>';
+    rhtml += '</tbody>';
     rhtml += '</table>';
     rhtml += '<div class="round_players">';
-    rhtml += '<table id="round_players_table_' + round_num +'">';
+    rhtml += '<table class="table table-condensed" id="round_players_table_' + round_num +'">';
 
     rhtml += '<caption>';
-    rhtml += '<div class="results_player_js_link">';
-    rhtml += '<a href="#" onClick="add_results_player('+round_num+');return false;">add player</a> ';
-    rhtml += '<a href="#" onClick="remove_results_player('+round_num+');return false;">remove player</a>';
+    rhtml += '<span class="btn-group">';
+    rhtml += '<a class="btn btn-small" href="#" onClick="add_results_player('+round_num+');return false;">Add Player</a> ';
+    rhtml += '<a class="btn btn-small" href="#" onClick="remove_results_player('+round_num+');return false;">Remove Player</a>';
+    rhtml += '</span>';
     rhtml += '</caption>';
 
-    rhtml += '<tbody>';
+    rhtml += '<thead>';
     rhtml += '<tr>';
     rhtml += '<th>Player</th>';
     rhtml += '<th>Kills</th>';
@@ -180,8 +189,10 @@ function add_results_round() {
     rhtml += '<th>Defensive<br/>Objectives</th>';
     rhtml += '<th>Score</th>';
     rhtml += '</tr>';
+    rhtml += '</thead>';
+    rhtml += '<tbody>';
     rhtml += '</tbody>';
-    
+
     rhtml += '</table>';
 
     rhtml += '</div>';
@@ -189,66 +200,67 @@ function add_results_round() {
 
     $('#rounds_container').append(rhtml);
     add_results_player(round_num);
-    add_results_player(round_num);
-    add_results_player(round_num);
-    add_results_player(round_num);
 }
 
 </script>
 
 {% endblock %}
 
+{% block title %}
+{{corr_match.team.name}} vs. {{corr_match.opponent.name}} -
+{% if adding %}Add Results{%else%}Edit Results{%endif%}
+{%endblock%}
+
 {% block body %}
-  <h2>{% if adding %}Add Results{%else%}Edit Results{%endif%}</h2>
-  <form id="results_form" action="" method=post>
+
+<div class="page-header">
+    <h1>
+        {{corr_match.team.name}} vs. {{corr_match.opponent.name}}
+        <small>{% if adding %}Add Results{%else%}Edit Results{%endif%}</small>
+    </h1>
+</div>
+
+  <form id="results_form" action="" method="post">
+    <fieldset>
     <input type="hidden" name="from" value="{{ request.values.get('from') }}"/>
     {{ form.hidden_tag() }}
 
-    {% if form.errors %}
-        <p>Uh oh! Please fix the errors below and try again.</p>
-    {% endif %}
-
     {% for field in form if not field|is_hidden_field -%}
-        {% if field.type == 'FieldList' %}
-
-        {% elif field.type != 'FieldList' %}
+        {% if field.type != 'FieldList' %}
             {% if field.name == 'team_id' and field.choices|count == 1 %}
-                <input type="hidden" name="{{field.name}}" 
-                    value="{{ field.choices[0][0] }}"/>
+                <input type="hidden" name="{{field.name}}" value="{{ field.choices[0][0] }}"/>
             {% elif field.name != 'final_result_method' %}
-            <p>
-                {{ field.label }}
-                {% if field.name == 'date_played' -%}
-                <span>(in {{ field.data|fmt_datetime('zzzz') }})</span>
-                {%- endif -%}
-                <br/>
-                {% if field.errors -%}
-                    <div class="errors">
-                    <ul>
-                    {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
-                    </ul>
-                    </div>
-                {% endif -%}
-                {% if field.name == 'opponent_id' or 
-                    field.name == 'server_id' or 
-                    field.name == 'competition_id' %}
-                    {{ field(disabled='disabled') }}
-                {% else %}
-                    {{ field }}
-                {% endif -%}
+                <div class="control-group {% if field.errors -%} error{%-endif-%}">
+                    {{ field.label(class="control-label") }}
+                    <div class="controls">
+                        {% if field.name == 'opponent_id' or field.name == 'server_id' or field.name == 'competition_id' %}
+                            {{ field(class='span5', disabled='disabled') }}
+                        {% elif field.name == 'date_played' %}
+                            {{ field(date_class="span2", time_class="span1") }}
+                        {% else %}
+                            {{ field(class="span5") }}
+                        {% endif -%}
 
-                {% if field.name == 'date_played' -%}
-                <span>{{ field.data|fmt_datetime('zzz') }}</span>
-                {% endif -%}
-            </p>
+                        {% if field.errors|length > 1 -%}
+                            <ul class="help-block">
+                                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                            </ul>
+                        {% elif field.errors|length == 1 -%}
+                            <span class="help-inline">{{field.errors[0]}}</span>
+                        {% endif -%}
+                    </div>
+                </div>
             {% endif %}
         {% endif %}
     {% endfor -%}
+    </fieldset>
 
     <div id="special">
-    <label>Was this a forfeit?</label><br/>
-    <input type="submit" name="forfeit_win" id="forfeit_win" value="Forfeit Win"/>
-    <input type="submit" name="forfeit_loss" id="forfeit_loss" value="Forfeit Loss"/>
+        Was this a forfeit?<br/>
+        <div class="btn-group">
+            <button type="submit" class="btn" id="forfeit_win">Forfeit Win</button>
+            <button type="submit" class="btn" id="forfeit_loss">Forfeit Loss</button>
+        </div>
     </div>
 
     <div id="rounds_container">
@@ -259,44 +271,50 @@ function add_results_round() {
         {% if f.type == 'FormField' %}
             <div class="round" id="round_{{ct}}">
             <h3>Round {{ ct }}</h3>
-            <table class="round_map">
-            <tr>
-            <th>{{ f.map_id.label.text }}</th>
-            <th>{{ f.side_id.label.text }}</th>
-            <th>{{ f.gametype_id.label.text }}</th>
-            </tr>
-
-            <tr>
-            <td>{{ f.map_id }}</td>
-            <td>{{ f.side_id }}</td>
-            <td>{{ f.gametype_id }}</td>
-            </tr>
+            <table class="table table-condensed">
+            <thead>
+                <tr>
+                <th>{{ f.map_id.label.text }}</th>
+                <th>{{ f.side_id.label.text }}</th>
+                <th>{{ f.gametype_id.label.text }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                <td>{{ f.map_id }}</td>
+                <td>{{ f.side_id }}</td>
+                <td>{{ f.gametype_id }}</td>
+                </tr>
+            </tbody>
             </table>
 
-            <table class="round_score">
+            <table class="table table-condensed">
+            <thead>
             <tr>
-            <th>{{ f.wins.label.text }}<br/><span>(Points For)</span></th>
-            <th>{{ f.losses.label.text }}<br/><span>(Points Against)</span></th>
+            <th>{{ f.wins.label.text }} <span>(Points For)</span></th>
+            <th>{{ f.losses.label.text }} <span>(Points Against)</span></th>
             <th>{{ f.draws.label.text }}</th>
             </tr>
-
+            </thead>
+            <tbody>
             <tr>
             <td>{{ f.wins(onBlur="update_final_result();", class="round_wins_input") }}</td>
             <td>{{ f.losses(onBlur="update_final_result();", class="round_losses_input") }}</td>
             <td>{{ f.draws(onBlur="update_final_result();", class="round_draws_input") }}</td>
             </tr>
+            </tbody>
             </table>
 
             <div class="round_players">
-            <table id="round_players_table_{{ct-1}}">
+            <table class="table table-condensed" id="round_players_table_{{ct-1}}">
+                <caption class="bt1n-group">
+                    <span class="btn-group">
+                        <a class="btn btn-small" href="#" onClick="add_results_player({{ct-1}});return false;">Add Player</a>
+                        <a class="btn btn-small" href="#" onClick="remove_results_player({{ct-1}});return false;">Remove Player</a>
+                    </span>
+                </caption>
 
-            <caption class="results_player_js_link">
-                <a href="#" onClick="add_results_player({{ct-1}});return false;">add player</a> 
-                <a href="#"
-                onClick="remove_results_player({{ct-1}});return false;">remove player</a>
-            </caption>
-
-            <tbody>
+            <thead>
             <tr>
             <th>Player</th>
             <th>Kills</th>
@@ -305,15 +323,16 @@ function add_results_round() {
             <th>Defensive<br/>Objectives</th>
             <th>Score</th>
             </tr>
-            
+            </thead>
+            <tbody>
             {% for fp in f.players %}
                 <tr>
                 <td>{{ fp.user_id }}</td>
-                <td>{{ fp.kills }}</td>
-                <td>{{ fp.deaths }}</td>
-                <td>{{ fp.off_objs }}</td>
-                <td>{{ fp.def_objs }}</td>
-                <td>{{ fp.score }}</td>
+                <td>{{ fp.kills(class="span1") }}</td>
+                <td>{{ fp.deaths(class="span1") }}</td>
+                <td>{{ fp.off_objs(class="span1") }}</td>
+                <td>{{ fp.def_objs(class="span1") }}</td>
+                <td>{{ fp.score(class="span1") }}</td>
                 </tr>
             {%- endfor -%}
             </tbody>
@@ -324,18 +343,12 @@ function add_results_round() {
 
             {% set ct = ct + 1 %}
         {% endif -%}
-        {% if loop.last %}
-
-        {% endif %}
     {% endfor %}
     </div>
 
-    <div id="round_js_links">
-        <a href="#" onClick="add_results_round();return false;">add 
-        round</a>
-
-        <a href="#" onClick="remove_results_round();return false;">remove
-        round</a>
+    <div class="btn-group">
+        <a class="btn btn-small" href="#" onClick="add_results_round();return false;">Add Round</a>
+        <a class="btn btn-small" href="#" onClick="remove_results_round();return false;">Remove Round</a>
     </div>
 
     <div id="final_results">
@@ -343,20 +356,17 @@ function add_results_round() {
         {{ form.final_result_method(onMouseOver="update_final_result();") }}
     </div>
 
-    <p>
-      <input type="submit" name="submit" 
-        value="{%- if adding %}Add Results{%else%}Save Results{%endif%}">
-    </p>
+    <button type="submit" class="btn btn-primary">
+        {%- if adding %}Add Results{%else%}Save Results{%endif%}
+    </button>
   </form>
 
     {% if match_id %}
     <p>
     <h2>Delete Results</h2>
-        <form method="post" action="{{url_for('show_match', match_id=match_id,
-        action='delete')}}">
+        <form method="post" action="{{url_for('show_match', match_id=match_id, action='delete')}}">
         <input type="submit" value="Delete Match"/>
         </form>
     </p>
     {% endif %}
 {% endblock %}
-

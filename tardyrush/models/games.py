@@ -24,7 +24,7 @@ class Game(db.Model):
     __tablename__ = 'games'
     id = create_id_column('game')
     name = create_name_column('game')
-    abbr = db.Column('abbreviation', db.String(255), nullable=False, 
+    abbr = db.Column('abbreviation', db.String(255), nullable=False,
                      unique=True)
     thumbnail_url = db.Column('thumbnail_column', db.String(255),
                               nullable=True)
@@ -56,6 +56,3 @@ class Side(db.Model):
     game_id = db.Column('game_id', id_type, db.ForeignKey('games.game_id'), \
             nullable=False)
     name = create_name_column('side')
-
-
-

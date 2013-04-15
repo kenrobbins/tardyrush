@@ -2,17 +2,11 @@ import re
 import pytz
 import urllib
 import datetime
-
+import teams
 from babel import dates
-
 from jinja2 import evalcontextfilter, Markup, escape
 from flaskext.babel import format_datetime, to_user_timezone
-
 from tardyrush import app
-from tardyrush.models import MatchPlayer, CompletedMatch, TeamPlayer, \
-        ForumBot
-from teams import *
-
 from flask.ext.wtf import HiddenField
 
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
@@ -38,20 +32,6 @@ def urlencode(url, **kwargs):
     return "%s?%s" % (url, urllib.urlencode(seq))
 
 @app.template_filter()
-def urlquote(s, safe=''):
-    return urllib.quote(s, safe)
-
-@app.template_filter()
-def is_forfeit(val):
-    return val == CompletedMatch.FinalResultByForfeit
-
-@app.template_filter()
-def server_copy_text(fmt, m):
-    fmt = fmt.replace("%ADDR%", m.server.address)
-    fmt = fmt.replace("%PW%", m.password)
-    return fmt
-
-@app.template_filter()
 def add_time(dt, **kwargs):
     return dt + datetime.timedelta(**kwargs)
 
@@ -61,26 +41,6 @@ def kdr(fmt, kills, deaths):
         return '<span class="inf_kdr">&#8734;</span>'
     kdr = float(kills) / float(deaths)
     return fmt % kdr
-
-@app.template_filter()
-def pretty_forum_bot_type(value):
-    return ForumBot.TypePrettyNames[value] 
-
-@app.template_filter()
-def pretty_team_player_status(value):
-    return TeamPlayer.StatusPrettyNames[value] 
-
-@app.template_filter()
-def pretty_match_player_status(value):
-    return MatchPlayer.StatusPrettyNames[value] 
-
-@app.template_filter()
-def can_edit_match(team_id=None):
-    return is_team_leader(team_id)
-
-@app.template_filter()
-def can_edit_team(team_id=None):
-    return is_team_leader(team_id)
 
 @app.template_filter()
 def match_last_updated_format(value):
@@ -116,10 +76,6 @@ def record_format(value):
         out += "-%d" % (value[2])
     return out
 
-@app.template_filter()
-def fmt_datetime(fmt, dt):
-    return format_datetime(fmt, dt)
-
 def matches_datetime_format_full_for_team(dt, tz):
     return dates.format_datetime(dt,
             "EEEE',' MMMM d',' yyyy 'at' h':'mm a zzz",
@@ -145,4 +101,4 @@ def join_none(val, d=u''):
 
 @app.template_filter()
 def is_hidden_field(field):
-    return isinstance(field, HiddenField) #or \ isinstance(field, HiddenIntegerField)
+    return isinstance(field, HiddenField)

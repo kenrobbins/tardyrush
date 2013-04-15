@@ -1,111 +1,155 @@
-{% macro opponent(form, team_id, opponent_id=0) %}
+{% macro opponent(form, team, opponent_id=0, modal=False) %}
   {% set adding = opponent_id == 0 %}
-  <h2>{%- if adding %}Add{%-else%}Edit{%-endif%} Opponent</h2>
-  <form 
-  {% if adding %}
-    action="{{url_for('team_admin.add_opponent',team_id=team_id)}}" 
-  {% else %}
-    action="{{url_for('team_admin.opponent',team_id=team_id,opponent_id=opponent_id,action='edit')}}" 
+
+  {% if not modal %}
+  <div class="page-header">
+      <h1>{{team.name}} <small>{%- if adding %}Add{%-else%}Edit{%-endif%} Opponent</small></h1>
+  </div>
   {% endif %}
+
+  <form
+  {% if adding -%}
+    action="{{url_for('team_admin.add_opponent',team_id=team.id)}}"
+  {%- else -%}
+    action="{{url_for('team_admin.opponent',team_id=team.id,opponent_id=opponent_id,action='edit')}}"
+  {%- endif %}
   method="post" id="opponent_form">
+
+  {% if modal %}
+    <div class="modal-body">
+  {% endif %}
+
+  <fieldset>
     {{ form.hidden_tag() }}
 
-    {% if form.errors %}
-        <p>Uh oh! Please fix the errors below and try again.</p>
-    {% endif %}
-
     {% for field in form if not field|is_hidden_field -%}
-        {{ field.type }}
         {% if field.type != 'FieldList' -%}
             {% if field.name == 'team_id' and field.choices|count == 1 %}
-                <input type="hidden" name="{{field.name}}" 
+                <input type="hidden" name="{{field.name}}"
                     value="{{ field.choices[0][0] }}"/>
             {% else %}
-                <p>
-                {{ field.label }}<br/>
-                {% if field.errors -%}
-                    <ul class="errors">
-                    {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
-                    </ul>
-                {% endif -%}
-                {{ field }}
-                </p>
+                    <div class="control-group {% if field.errors -%} error{%-endif-%}">
+                        {{ field.label(class="control-label") }}
+                        <div class="controls">
+                            {{ field(class='span5') }}
+                            {% if field.errors|length > 1 -%}
+                                <ul class="help-block">
+                                    {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                                </ul>
+                            {% elif field.errors|length == 1 -%}
+                                <span class="help-inline">{{field.errors[0]}}</span>
+                            {% endif -%}
+                        </div>
+                    </div>
             {% endif -%}
         {% endif -%}
     {% endfor -%}
+    </fieldset>
 
-    <p>
-      <input type="submit" name="submit"
-        value="{%- if adding %}Add Opponent{% else %}Save Opponent{% endif %}"/>
-    </p>
+  {% if not modal %}
+      <button type="submit" class="btn btn-primary">{%- if adding %}Add Opponent{% else %}Save Opponent{% endif %}</button>
+  {% else %}
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+      <button type="submit" class="btn btn-primary">Add Opponent</button>
+    </div>
+  {% endif %}
   </form>
 {% endmacro %}
 
 {% macro time_zone(form) %}
-    <h2>Update Time Zone</h2>
-    <form id="time_zone_form"
-    action="{{url_for('account.update_time_zone')}}" method="post">
-        {{ form.hidden_tag() }}
+    <form id="time_zone_form" action="{{url_for('account.update_time_zone')}}" method="post">
 
-        {% if form.errors %}
-            <p>Uh oh! Please fix the errors below and try again.</p>
-        {% endif %}
+    <div class="modal-body">
 
-        {% for field in form if not field|is_hidden_field -%}
-            <p>
-            {{ field.label }}<br/>
-            {% if field.errors -%}
-                <ul class="errors">
-                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
-                </ul>
-            {% endif -%}
-            {{ field }}
-            </p>
-        {% endfor -%}
+        <fieldset>
+            {{ form.hidden_tag() }}
 
-        <p><input type="submit" name="submit" value="Save"/></p>
+            {% for field in form if not field|is_hidden_field -%}
+                <div class="control-group {% if field.errors -%} error{%-endif-%}">
+                    {{ field.label(class="control-label") }}
+                    <div class="controls">
+                        {{ field(class='span5') }}
+                        {% if field.errors|length > 1 -%}
+                            <ul class="help-block">
+                                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                            </ul>
+                        {% elif field.errors|length == 1 -%}
+                            <span class="help-inline">{{field.errors[0]}}</span>
+                        {% endif -%}
+                    </div>
+                </div>
+
+            {% endfor -%}
+        </fieldset>
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+
     </form>
 {% endmacro %}
 
-{% macro server(form, team_id, server_id=0) %}
+{% macro server(form, team, server_id=0, modal=False) %}
   {% set adding = server_id == 0 %}
-  <h2>{%- if adding %}Add{%-else%}Edit{%-endif%} Server</h2>
-  <form
-  {% if adding %}
-    action="{{url_for('team_admin.add_server',team_id=team_id)}}"
-  {% else %}
-    action="{{url_for('team_admin.server',team_id=team_id,server_id=server_id,action='edit')}}"
+
+  {% if not modal %}
+  <div class="page-header">
+      <h1>{{team.name}} <small>{%- if adding %}Add{%-else%}Edit{%-endif%} Server</small></h1>
+  </div>
   {% endif %}
+
+  <form
+  {% if adding -%}
+    action="{{url_for('team_admin.add_server',team_id=team.id)}}"
+  {%- else -%}
+    action="{{url_for('team_admin.server',team_id=team.id,server_id=server_id,action='edit')}}"
+  {%- endif %}
   method="post"
   id="server_form">
-    {{ form.hidden_tag() }}
 
-    {% if form.errors %}
-        <p>Uh oh! Please fix the errors below and try again.</p>
-    {% endif %}
+  {% if modal %}
+    <div class="modal-body">
+  {% endif %}
+
+    <fieldset>
+    {{ form.hidden_tag() }}
 
     {% for field in form if not field|is_hidden_field -%}
         {% if field.type != 'FieldList' -%}
             {% if field.name == 'team_id' and field.choices|count == 1 %}
-                <input type="hidden" name="{{field.name}}" 
+                <input type="hidden" name="{{field.name}}"
                     value="{{ field.choices[0][0] }}"/>
             {% else %}
-                <p>
-                {{ field.label }}<br/>
-                {% if field.errors -%}
-                    <ul class="errors">
-                    {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
-                    </ul>
-                {% endif -%}
-                {{ field }}
-                </p>
+                <div class="control-group {% if field.errors -%} error{%-endif-%}">
+                    {{ field.label(class="control-label") }}
+                    <div class="controls">
+                        {{ field(class='span5') }}
+                        {% if field.errors|length > 1 -%}
+                            <ul class="help-block">
+                                {% for error in field.errors %}<li>{{error}}</li>{% endfor -%}
+                            </ul>
+                        {% elif field.errors|length == 1 -%}
+                            <span class="help-inline">{{field.errors[0]}}</span>
+                        {% endif -%}
+                    </div>
+                </div>
             {% endif -%}
         {% endif -%}
     {% endfor -%}
+    </fieldset>
 
-    <p>
-      <input type="submit" name="submit"
-        value="{%- if adding %}Add Server{% else %}Save Server{% endif %}"/>
-    </p>
+  {% if not modal %}
+      <button type="submit" class="btn btn-primary">{%- if adding %}Add Server{% else %}Save Server{% endif %}</button>
+  {% else %}
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+      <button type="submit" class="btn btn-primary">Add Server</button>
+    </div>
+  {% endif %}
   </form>
 {% endmacro %}

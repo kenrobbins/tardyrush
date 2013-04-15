@@ -41,6 +41,10 @@ class MatchPlayer(db.Model):
         self.user_id = user_id
         self.status = status
 
+    @property
+    def pretty_status(self):
+        return self.__class__.StatusPrettyNames.get(self.status, "")
+
 class MatchPlayerForm(Form):
     user_id = HiddenIntegerField(u'User ID', validators=[NumberRange(min=1),
             Required()])
@@ -74,7 +78,7 @@ class Match(db.Model):
     password = db.Column('password', db.String(255), nullable=False)
     comments = db.Column('comments', db.String(255), nullable=False)
     date_created = db.Column('date_created', db.DateTime, nullable=False)
-    creator_user_id = db.Column('creator_user_id', id_type, 
+    creator_user_id = db.Column('creator_user_id', id_type,
             db.ForeignKey('users.user_id'),
             nullable=False)
     forum_post_url = db.Column('forum_post_url', db.String(255),
@@ -115,10 +119,17 @@ class Match(db.Model):
         self.comments = kwargs['comments']
         self.date_created = kwargs['date_created']
 
-    def get_match_records(self, team_id=None):
-        if team_id is None:
-            team_id = self.team_id
+    @property
+    def server_copy_text(self):
+        fmt = self.competition.game.server_copy_format
+        if not fmt:
+            return ''
 
+        fmt = fmt.replace("%ADDR%", self.server.address)
+        fmt = fmt.replace("%PW%", self.password)
+        return fmt
+
+    def historical_records(self):
         opponent_rec = db.session.query(\
                                     db.func.sum(\
                                         db.cast(CompletedMatch.wins >\
@@ -130,7 +141,7 @@ class Match(db.Model):
                                         db.cast(CompletedMatch.wins == \
                                                 CompletedMatch.losses, db.INT))\
                 ).\
-                filter(CompletedMatch.team_id == team_id).\
+                filter(CompletedMatch.team_id == self.team_id).\
                 filter(CompletedMatch.opponent_id == self.opponent_id).\
                 first()
 
@@ -145,7 +156,7 @@ class Match(db.Model):
                                         db.cast(CompletedMatch.wins == \
                                                 CompletedMatch.losses, db.INT))\
                 ).\
-                filter(CompletedMatch.team_id == team_id).\
+                filter(CompletedMatch.team_id == self.team_id).\
                 filter(CompletedMatch.competition_id == self.competition_id).\
                 first()
 
@@ -160,10 +171,10 @@ class Match(db.Model):
                                         db.cast(CompletedMatch.wins == \
                                                 CompletedMatch.losses, db.INT))\
                 ).\
-                filter(CompletedMatch.team_id == team_id).\
+                filter(CompletedMatch.team_id == self.team_id).\
                 filter(CompletedMatch.server_id == self.server_id).\
                 first()
-        
+
         opp_comp_rec = db.session.query(\
                                     db.func.sum(\
                                         db.cast(CompletedMatch.wins >\
@@ -175,7 +186,7 @@ class Match(db.Model):
                                         db.cast(CompletedMatch.wins == \
                                                 CompletedMatch.losses, db.INT))\
                 ).\
-                filter(CompletedMatch.team_id == team_id).\
+                filter(CompletedMatch.team_id == self.team_id).\
                 filter(CompletedMatch.opponent_id == self.opponent_id).\
                 filter(CompletedMatch.competition_id == self.competition_id).\
                 first()
@@ -196,7 +207,7 @@ class MatchForm(Form):
     team_id = SelectField(u'Team', coerce=int, validators=[Required()])
     opponent_id = SelectField(u'Opponent', coerce=int, choices=[],
             validators=[Required()])
-    competition_id = SelectField(u'Competition', coerce=int, 
+    competition_id = SelectField(u'Competition', coerce=int,
             validators=[Required()])
     server_id = SelectField(u'Server', coerce=int, validators=[Required()])
     date = MatchDateTimeField(u'Date', validators=[Required()])

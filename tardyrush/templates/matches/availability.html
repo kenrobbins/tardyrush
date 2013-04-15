@@ -1,215 +1,246 @@
 {% extends "layout.html" %}
 {% import 'helpers/gcal.html' as gcal %}
+
+{% macro status_buttons(aform, g, m, cur_status) %}
+    <form id="sb_form_{{m.id}}" method="post" action="{{ url_for('matches.show', match_id=m.id, action='status') }}">
+        {{ aform.hidden_tag('csrf_token') }}
+    </form>
+
+    <div class="status-buttons-wrap">
+        <div class="btn-group">
+            <a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">
+                Set Status <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu text-left" id="status_buttons_{{m.id}}">
+                <li class="available">
+                <a onClick="return update_player_status({{m.id}}, 'available')" href="#">Available</a>
+                </li>
+                <li class="maybe">
+                <a onClick="return update_player_status({{m.id}}, 'maybe')" href="#">Maybe</a>
+                </li>
+                <li class="unavailable">
+                <a onClick="return update_player_status({{m.id}}, 'unavailable')" href="#">Unavailable</a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group" id="more-dropdown-{{m.id}}">
+            <a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">
+                More <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu text-left">
+                {%- if g.user.can_edit_match(m.team.id) -%}
+                <li>
+                <a title="Edit this match" class="edit_match" href="{{ url_for('matches.show', action='edit',
+                match_id=m.id)}}">Edit Match</a>
+                </li>
+                {%- endif -%}
+                <li>
+                <a href="{{gcal.link(m)}}" title="Add this match to Google
+                    Calendar" target="_blank">Add To Google Calendar</a>
+                </li>
+                <li>
+                <a class="records-link" id="records-link-{{m.id}}" href="#">Show Historical Records</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+{% endmacro %}
+
 {% block head %}
-<link type="text/css" rel="stylesheet" href="/static/qtip2/jquery.qtip.css"/>
-<script type="text/javascript" src="/static/main.js"></script>
-<script type="text/javascript" src="/static/qtip2/jquery.qtip.js"></script>
-<script type="text/javascript" src="/static/zeroclipboard/ZeroClipboard.js"></script>
+<script type="text/javascript" src="/static/js/main.js"></script>
+<script type="text/javascript" src="/static/js/ZeroClipboard.min.js"></script>
 <script type="text/javascript">
-ZeroClipboard.setMoviePath( '{{url_for('.static', filename='zeroclipboard/ZeroClipboard.swf',
-_external=True)}}' );
+    ZeroClipboard.setDefaults({moviePath: '{{url_for('.static', filename='swf/ZeroClipboard.swf', _external=True)}}'});
 </script>
 <script type="text/javascript">
-$(document).ready(function() {
-    {%- for m in matches -%}
-        {%- for p in m.players -%}
-            {%- if p.user.id == g.user.id -%}
-                {%- set cur_status = p.status|pretty_match_player_status|lower-%}
-                $('#sb_{{cur_status}}_{{m.id}}').hide();
-            {%- endif -%}
-        {%- else -%}
-            $('#match_{{m.id}}').hide();
-        {%- endfor -%}
-        $('#recs_{{m.id}}').qtip({
-            content: {
-                text: $('#recs_table_{{m.id}}'),
-                title: { 
-                    text: 'Historical Records',
-                    button: true,
-                }
-            },
-            show: {
-                event: 'click',
-            },
-            hide: false
+    $(document).ready(function() {
+        $('.records-link').each(function(index, value) {
+            var id = value.id;
+            var match_id = id.match(/\d+$/)[0];
+            if (id.indexOf('close') > -1) {
+                $(value).click(function() {
+                    $('#records-table-'+match_id).hide();
+                    $('#records-link-'+match_id).html("Show Historial Records");
+                    return false;
+                });
+            } else {
+                $(value).click(function() {
+                    $('#records-table-'+match_id).toggle();
+                    $('#more-dropdown-'+match_id).removeClass("open");
+                    var current = $(value).html();
+                    if (current.indexOf("Show") > -1)
+                        current = current.replace("Show", "Hide");
+                    else
+                        current = current.replace("Hide", "Show");
+                    $(value).html(current);
+                    return false;
+                });
+            }
         });
-    {%- endfor -%}
-});
+        $('.btn-copy').each(function(index, value) {
+            var clip = new ZeroClipboard($(value), {activeClass: 'active'});
+        });
+
+        {%- for m in matches -%}
+            {%- for p in m.players -%}
+                {%- if p.user.id == g.user.id -%}
+                    {%- set cur_status = p.pretty_status|lower-%}
+                    $('#status_buttons_{{m.id}} .{{cur_status}}').hide();
+                {%- endif -%}
+            {%- else -%}
+                $('#match_{{m.id}}').hide();
+            {%- endfor %}
+        {%- endfor %}
+    });
 </script>
 {% endblock %}
+{% block title %}Upcoming Matches{%endblock%}
 {% block body %}
-  <h2>Upcoming Matches</h2>
+<div class="page-header">
+    <h1>Upcoming Matches</h1>
+</div>
 
-    {% macro status_buttons(m, cur_status) %}
-        <div id="status_buttons_{{m.id}}" class="status_buttons">
-        <form id="sb_available_{{m.id}}" method="post" action="{{
-        url_for('matches.show', match_id=m.id, action='status') }}">
-        {{ aform.hidden_tag('csrf_token') }}
-        {{ aform.s(value="available") }}
-        <input onClick="return update_player_status(this)" type="submit" name="submit" value="Available" />
-        </form>
-        <form id="sb_maybe_{{m.id}}" method="post" action="{{
-        url_for('matches.show', match_id=m.id, action='status') }}">
-        {{ aform.hidden_tag('csrf_token') }}
-        {{ aform.s(value="maybe") }}
-        <input onClick="return update_player_status(this)" type="submit" name="submit" value="Maybe" />
-        </form>
-        <form id="sb_unavailable_{{m.id}}" method="post" action="{{
-        url_for('matches.show', match_id=m.id, action='status') }}">
-        {{ aform.hidden_tag('csrf_token') }}
-        {{ aform.s(value="unavailable") }}
-        <input onClick="return update_player_status(this)" type="submit" name="submit" value="Unavailable" />
-        </form>
-        </div>
-    {% endmacro %}
 
+    {% set width = 3 %}
+    {% set span = (9 / width)|int %}
 
   {%- for m in matches %}
-    {% if loop.index0 % 3 == 0 -%}
-        <div class="match_row_container">
+    {% if loop.index0 % width == 0 -%}
+        <div class="row">
     {% endif %}
-    <div class="grid_4 middle_match alpha omega">
-    <div class="match_block">
 
-    <div class="icon_links">
-        <a href="{{gcal.link(m)}}"
-        title="Add this match to Google Calendar"
-        target="_blank"><img
-        src="{{url_for('.static', filename='googlecalendar.png')}}" /></a>
+    <div class="span{{span}}">
+        <div class="well well-small">
 
-        {%- if m.team.id|can_edit_match -%}
-        <a title="Edit this match" class="edit_match" href="{{
-        url_for('matches.show', action='edit',
-        match_id=m.id)}}"><img src="/static/pencil.png" /></a>
-        {%- endif -%}
-
-        {%- if records[m.id] -%}
-            <a class="recs" id="recs_{{m.id}}" href="#" onClick="return false;"><img
-            src="/static/chart_bar.png"/></a>
-        {%- endif -%}
-    </div>
-        <h3 class="opponent">
+        <h4 class="text-center">
         <a href="{{ url_for('matches.show', match_id=m.id) }}">{{ m.team.tag }} vs {{m.opponent.tag }}</a>
-        </h3>
+        </h4>
 
-        <h4 class="date">{{ m.date|matches_datetime_format }}</h4>
-
-        <div class="back"><h4>Opponent</h4>
-        <p>{{ m.opponent.name }}</p>
-        </div>
-
-        <div class="back">
-        <h4>Competition</h4>
-        <p>{{ m.competition.abbr }}</p>
-        </div>
-
-        {%- if records[m.id] -%}
-            <div class="recs_table" id="recs_table_{{m.id}}">
-            <table>
-            <tr>
-            <th>vs {{ m.opponent.tag }} in {{ m.competition.abbr }} </th>
-            <td>{{ records[m.id][3]|record_format }}</td>
-            </tr>
-            <tr>
-            <th>vs {{ m.opponent.tag }}</th>
-            <td>{{ records[m.id][0]|record_format }}</td>
-            </tr>
-            <tr>
-            <th>in {{ m.competition.abbr }}</th>
-            <td>{{ records[m.id][1]|record_format }}</td>
-            </tr>
-            <tr>
-            <th>on {{ m.server.name }}</th>
-            <td>{{ records[m.id][2]|record_format }}</td>
-            </tr>
-            </table>
-            </div>
-        {%- endif -%}
+        <p>
+        <strong>{{ m.date|matches_datetime_format }}</strong>
+        </p>
+        <p>
+        <small><strong>Opponent</strong></small><br/>
+        {{ m.opponent.name }}
+        </p>
+        <p>
+        <small><strong>Competition</strong></small><br/>
+        {{ m.competition.abbr }}
+        </p>
 
         {%- if m.server -%}
-            <div class="back">
-            {%- if m.competition.game.server_copy_format -%}
-            <div id="copy_server_info_cont_{{m.id}}" class="copy_server_info">
-                <div title="Copy server info to clipboard" id="copy_server_info_{{m.id}}">
-                &nbsp;
-                </div>
-            </div>
-            <script type="text/javascript">
-                var clip = new ZeroClipboard.Client();
-                var txt = "{{m.competition.game.server_copy_format|server_copy_text(m)}}";
-                clip.setText(txt);
-                clip.setHandCursor(true);
-                clip.glue( 'copy_server_info_{{m.id}}', 'copy_server_info_cont_{{m.id}}' );
-                document.getElementById(clip.movieId).title = "Copy server info to clipboard";
-            </script>
-            {%- endif -%}
-            <h4>Server</h4>
             <p>
+            <small>
+                <strong class="server-header">Server</strong>
+                {% if m.competition.game.server_copy_format %}
+                <a data-clipboard-text="{{m.server_copy_text}}" class="btn-copy btn btn-mini">
+                    <i class="custom-icon-copy"></i>
+                    Copy
+                </a>
+                {%- endif -%}
+            </small>
+
+            <br/>
             {{ m.server.name }}<br/>
-            {{ m.server.address }} 
-            {%- if m.password|trim|length %} <br/>
-            Password: <span
-            class="match_password">{{ m.password }}</span>{%- endif -%}
+            {{ m.server.address }}
+
+            {%- if m.password|trim|length %}
             </p>
-            </div>
+            <p>
+            <small><strong>Server Password</strong></small><br/>
+            {{ m.password }}
+            {%- endif -%}
+
+            </p>
         {%- endif -%}
 
         {%- if m.comments|trim|length -%}
-        <div class="comments back">
-            <h4>Comments</h4>
-            {{m.comments|trim|nl2br|replace("<p>"|safe, "<p class='first'>"|safe, 1)}}
-        </div>
+        <p class="comments">
+        <small><strong>Comments</strong></small>
+        </p>
+        {{m.comments|trim|nl2br}}
         {%- endif -%}
 
         {% set cur_status = "" %}
-        <table id="match_{{m.id}}" class="players">
-        <tr>
-        <th>Player</th><th>Status</th></tr>
+        <table id="match_{{m.id}}" class="table table-condensed">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
         {%- for p in m.players %}
             {%- if p.user.id == g.user.id -%}
-                <tr class="current_user">
-                {% set cur_status = p.status|pretty_match_player_status|lower %}
-                {% set sb = status_buttons(m, cur_status) %}
+                <tr class="info">
+                {% set cur_status = p.pretty_status|lower %}
+                {% set sb = status_buttons(aform, g, m, cur_status) %}
             {%- else %}
                 <tr>
             {%- endif %}
 
             <td>{{ p.user.name }}</td>
-            <td id="status_{{m.id}}_{{p.user.id}}" class="{{ p.status|pretty_match_player_status|lower }}">{{ p.status|pretty_match_player_status }}</td>
+            <td id="status_{{m.id}}_{{p.user.id}}" class="{{ p.pretty_status|lower }}">
+                {{ p.pretty_status }}
+            </td>
             </tr>
-
-            {%- if loop.last -%}
-            {%- endif %}
         {%- endfor %}
+        </tbody>
         </table>
+
+        {% set records = m.historical_records() %}
+
+        <div id="records-table-{{m.id}}" class="records-table">
+            <table class="table table-condensed">
+                <caption><strong>Historical Records</strong> <a
+                        id="records-close-link-{{m.id}}"
+                        class="records-link close" href="#">&times;</a></caption>
+                <thead>
+                    <tr>
+                        <th>Versus this opponent<br/>in this competition</th>
+                        <td>{{ records[3]|record_format }}</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                    <th>Versus this opponent</th>
+                    <td>{{ records[0]|record_format }}</td>
+                    </tr>
+                    <tr>
+                    <th>In this competition</th>
+                    <td>{{ records[1]|record_format }}</td>
+                    </tr>
+                    <tr>
+                    <th>On this server</th>
+                    <td>{{ records[2]|record_format }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         {% if sb %}
             {{ sb }}
         {% else %}
-            {{ status_buttons(m, "") }}
+            {{ status_buttons(aform, g, m, "") }}
         {% endif %}
 
-
-
     </div>
-
-
     </div>
-    {% if loop.index0 % 3 == 2 or loop.last -%}
-        <br class="clear"/>
+    {% if loop.index0 % width == (width-1) or loop.last -%}
         </div>
     {% endif %}
-  
+
   {%- else %}
 
-  <p>No matches here!
-  {% if g.is_admin %}
-  Why don't you <a href="{{url_for('matches.add')}}">add some</a>?
-  {% elif g.teams|length == 0 %}
-  <a href="{{url_for('teams.all')}}">Join a team</a> to start seeing matches.
-  {% else %}
-  Ask your team leaders to add some.
-  {%- endif %}
-  </p>
+    <p>No matches here!
+    {% if g.user.is_admin %}
+        Why don't you <a href="{{url_for('matches.add')}}">add some</a>?
+    {% elif not g.user.is_on_team() %}
+        <a href="{{url_for('teams.all')}}">Join a team</a> to start seeing matches.
+    {% else %}
+        Ask your team leaders to add some.
+    {%- endif %}
+    </p>
 
   {%- endfor %}
 {% endblock %}
