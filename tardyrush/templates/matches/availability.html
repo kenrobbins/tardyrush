@@ -133,7 +133,8 @@
             <small>
                 <strong class="server-header">Server</strong>
                 {% if m.competition.game.server_copy_format %}
-                <a data-clipboard-text="{{m.server_copy_text}}" class="btn-copy btn btn-mini">
+                <a data-clipboard-text="{{m.server_copy_text}}" class="btn-copy
+                    btn btn-mini" title="Copy server info to clipboard">
                     <i class="custom-icon-copy"></i>
                     Copy
                 </a>
