@@ -3,11 +3,21 @@
 {%- if adding %}Create Team{%else%}Edit Team{%endif%}
 {% endblock %}
 {% block teamname %}
-    {{team.name}}
+{% if adding %}
+Create a team
+{%else%}
+{{team.name}}
+{%endif%}
 {% endblock %}
 {% block body %}
 <div class="page-header">
-    <h1>{{team.name}} <small>{%- if adding %}Create Team{%else%}Edit Team{%endif%}</small></h1>
+    <h1>
+    {% if adding %}
+    Create a team
+    {%else%}
+    {{team.name}} <small>Edit Team</small>
+    {%endif%}
+    </h1>
 </div>
 
     <form action="" method=post>

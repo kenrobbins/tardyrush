@@ -37,6 +37,8 @@ class Team(db.Model):
 
     forum_bots = db.relation("ForumBot", cascade="delete")
 
+    results = db.relation("CompletedMatch", cascade="delete", lazy="dynamic")
+
 class TeamPlayer(db.Model):
     __tablename__ = 'team_players'
     team_id = db.Column('team_id', id_type, db.ForeignKey('teams.team_id'),

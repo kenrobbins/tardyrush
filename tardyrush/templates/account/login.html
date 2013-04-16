@@ -7,18 +7,29 @@
 
     {%- if create -%}
     <p>Sign in through Steam or enter your OpenID in the box below.</p>
+    {% else %}
+    <p>Click the <strong>Sign in through Steam</strong> button to continue.</p>
     {%- endif -%}
 
     <form action="{{url_for('account.signin')}}" method="post">
       <input type="hidden" name="next" value="{{ n }}"/>
-      <p><input type="image" src="/static/img/sits_small.png"
-      name="submit_sits" value="Sign In Through Steam" title="Sign In Through Steam"/></p>
-
-    {% if create %}
-      <label for="openid">OpenID</label>
-      <input type="text" name="openid"/>
       <input type="hidden" name="t" value="{%- if create -%}create{%-endif-%}"/>
-      <button class="btn btn-primary" type="submit">Sign In</button>
+
+      <input type="image" src="/static/img/sits_small.png"
+      name="submit_sits" value="Sign In Through Steam" title="Sign In Through Steam"/>
+
+      {% if create %}
+      <fieldset style="margin-top: 10px;">
+          <label for="openid">OpenID</label>
+
+          <div class="control-group">
+              <div class="controls">
+                  <input type="text" name="openid"/>
+              </div>
+          </div>
+
+          <button class="btn btn-primary" type="submit">Sign In</button>
+      </fieldset>
     {% endif %}
   </form>
 {% endblock %}
