@@ -1,35 +1,24 @@
 {% extends "layout.html" %}
 {% block title %}Sign In{% endblock %}
 {% block body %}
-    {%- if create -%}
-        <h2>Create An Account</h2>
-
-        <p>Create an account by signing in through Steam...</p>
-    {%- else -%}
-        <h2>Sign In</h2>
-    {%- endif -%}
+<div class="page-header">
+    <h1>Sign In</h1>
+</div>
 
     {%- if create -%}
-    <p>Or by signing in through another OpenID provider.</p>
+    <p>Sign in through Steam or enter your OpenID in the box below.</p>
     {%- endif -%}
 
     <form action="{{url_for('account.signin')}}" method="post">
       <input type="hidden" name="next" value="{{ n }}"/>
-    {% if error %}
-        <p class=error><strong>Error:</strong> {{ error }}</p>
-    {% endif %}
+      <p><input type="image" src="/static/img/sits_small.png"
+      name="submit_sits" value="Sign In Through Steam" title="Sign In Through Steam"/></p>
+
     {% if create %}
-    <p>
-      <label for="openid">OpenID</label><br/>
+      <label for="openid">OpenID</label>
       <input type="text" name="openid"/>
       <input type="hidden" name="t" value="{%- if create -%}create{%-endif-%}"/>
-    </p>
-    <p>
-      <input type="submit" value="Sign In"/>
-    </p>
+      <button class="btn btn-primary" type="submit">Sign In</button>
     {% endif %}
-      <p><input type="image" src="/static/sits_large_noborder.png"
-      name="submit_sits" value="Sign In Through Steam"
-      title="Sign In Through Steam"/></p>
   </form>
 {% endblock %}

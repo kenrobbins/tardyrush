@@ -352,7 +352,7 @@ def show(match_id, action):
 @matches.route('/match/')
 @matches.route('/match/upcoming/')
 def my_matches():
-    if not g.user:
+    if g.user.is_guest:
         return redirect(url_for('all'))
 
     cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
@@ -374,7 +374,7 @@ def my_matches():
 
 @matches.route('/match/previous/')
 def my_previous_matches():
-    if not g.user:
+    if g.user.is_guest:
         return redirect(url_for('all'))
 
     cutoff = datetime.datetime.utcnow()

@@ -1,36 +1,18 @@
 {% extends "layout.html" %}
 {% block body %}
-    <h2>Welcome!</h2>
 
-    <p class="blurb">
-    TardyRush makes it easy for you to keep track of your team's
-    matches.
-    </p>
-
-    <ul class="features">
-    <li>Match Availability &amp; Schedule</li>
-    <li>Match Record</li>
-    <li>Player Stats</li>
-    </ul>
-
-    <h2>Get Started</h2>
-
+<div class="jumbotron">
+  <h1>tardyrush</h1>
+  <p>tardyrush makes it easy to keep track of your gaming team's matches.</p>
+  <p> You can easily track match availability, team stats, and player stats.</p>
+  <p> If you have a Steam account, then you already have a tardyrush account.</p>
+  <p>
     <form action="{{url_for('account.signin')}}" method="post">
     <input type="hidden" name="next" value="{{ request.url }}"/>
-
-    <div class="getting_started">
-    
-    <input type="image" src="/static/sits_small.png"
-    name="submit_sits" value="Sign In Through Steam"
-    title="Sign In Through Steam"/>
-    
-    </div>
+    <input type="image" src="/static/img/sits_small.png"
+    name="submit_sits" value="Sign In Through Steam" title="Sign In Through Steam"/>
     </form>
-
-    <h2>More Coming Soon</h2>
-
-    <p class="blurb">There are more updates on the way.  Feel
-    free to <a href="{{url_for('contact')}}">send suggestions or feedback.</a>
-    </p>
+  </p>
+</div>
 
 {% endblock %}

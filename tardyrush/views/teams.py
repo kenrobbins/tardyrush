@@ -77,7 +77,7 @@ def show(team_id=-1, action=''):
             return redirect(url_for('all'))
 
         if action == 'join':
-            if not g.user:
+            if g.user.is_guest:
                 flash(u'You must be signed in to join a team.', 'error')
             elif g.user.is_on_team(team_id):
                 flash(u'You are already on this team.', 'info')
@@ -106,7 +106,7 @@ def show(team_id=-1, action=''):
                 return redirect(url_for('show', team_id=team.id))
 
         elif action == 'leave':
-            if not g.user:
+            if g.user.is_guest:
                 flash(u'You must be signed in to join a team.', 'error')
             elif not g.user.is_on_team(team_id):
                 flash(u'You are not on this team.', 'error')

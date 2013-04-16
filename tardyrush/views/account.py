@@ -47,8 +47,11 @@ def signin(t):
     if n.endswith('signin') or n.endswith('signin/'):
         n = n.replace('signin', '')
 
-    return rt('account/login.html', n=n, next=oid.get_next_url(), create=app.debug,
-            error=oid.fetch_error())
+    error = oid.fetch_error()
+    if error:
+        flash(error, "error")
+
+    return rt('account/login.html', n=n, next=oid.get_next_url(), create=app.debug)
 
 @account.route('/force_login/<username>')
 def force_login(username):
@@ -88,7 +91,7 @@ def create_profile():
 
         db.session.add(user)
         db.session.commit()
-        flash(u'Profile successfully created', 'success')
+        flash(u'Your profile was successfully created.', 'success')
         return redirect(oid.get_next_url())
 
     if not len(form.errors):
@@ -139,7 +142,7 @@ def settings():
         form.populate_obj(g.user)
         db.session.commit()
         babel_refresh()
-        flash(u'Settings successfully updated.', 'success')
+        flash(u'Your settings were successfully updated.', 'success')
         return redirect(url_for('settings'))
 
     return rt('account/create.html', settings=True, form=form)
@@ -149,5 +152,5 @@ def signout():
     session.pop('openid', None)
     session.pop('force_login', None)
     session.clear()
-    flash(u'You were signed out.', 'info')
+    flash(u'You were signed out.  See ya.', 'info')
     return redirect('/')

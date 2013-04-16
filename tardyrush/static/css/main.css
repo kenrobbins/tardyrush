@@ -88,3 +88,18 @@ p.comments { margin-bottom: 0 !important; }
 
 .sorting_asc_disabled { padding-right: 20px; }
 .sorting_desc_disabled { padding-right: 20px; }
+
+.hero-unit h1 { margin-bottom: 10px; }
+
+.jumbotron {
+    margin: 20px 30px;
+    text-align: center;
+}
+.jumbotron h1 {
+    font-size: 100px;
+    line-height: 1;
+}
+.jumbotron p {
+    font-size: 24px;
+    line-height: 1.25;
+}

@@ -38,7 +38,7 @@
                         {% else %}
                             <form class="navbar-form pull-right" action="{{url_for('account.signin')}}" method="post">
                                 <input type="hidden" name="next" value="{{ request.url }}"/>
-                                <input type="image" src="/static/sits_small.png"
+                                <input type="image" src="/static/img/sits_small.png"
                                     name="submit_sits" value="Sign In Through Steam" title="Sign In Through Steam"/>
                             </form>
                         {% endif %}
@@ -49,7 +49,9 @@
 
         <div class="container">
             <div class="row">
+                {% set leftbar = 0 %}
                 {%- if page.top in ('matches', 'my_matches') %}
+                    {% set leftbar = 1 %}
                     <div class="span3">
                         <div class="well sidebar-nav">
                             <ul class="nav nav-list">
@@ -76,6 +78,7 @@
                     </div>
 
                 {%- elif page.top in ('teams', 'my_teams', 'team') %}
+                    {% set leftbar = 1 %}
 
                     <div class="span3">
                         <div class="well sidebar-nav">
@@ -117,7 +120,12 @@
                     </div>
                 {%- endif %}
 
+                {% if leftbar == 1 %}
                 <div class="span9">
+                {% else %}
+                <div class="span12">
+                {% endif %}
+
                     {%- for category, message in get_flashed_messages(with_categories=true) %}
                     <div class="alert alert-{{ category }}">
                         <button type="button" class="close" data-dismiss="alert">&times;</button>
