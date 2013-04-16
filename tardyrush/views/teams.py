@@ -405,9 +405,14 @@ def stats(team_id=0):
 
     # only look at one game at a time.  but the tables only have competition
     # id, so get the competition ids from the game id.
-    game_id = request.values.get('game') or 1
+    game_id = request.values.get('game', 1)
 
-    game = db.session.query(Game).filter_by(id=game_id).one()
+    game = db.session.query(Game).filter_by(id=game_id).first()
+
+    if not game:
+        flash("That game doesn't exit.", "info")
+        return redirect(url_for('stats', team_id=team_id))
+
     competitions = db.session.query(Competition.id,
                                     Competition.abbr,
                                     Competition.name).\
@@ -770,18 +775,22 @@ def combined_stats(team_id=0):
     else:
         page = { 'top' : 'team', 'sub' : 'player_stats' }
 
-    game_id = request.values.get('game') or 1
+    game_id = request.values.get('game', 1)
 
-    game = db.session.query(Game).filter_by(id=game_id).one()
+    game = db.session.query(Game).filter_by(id=game_id).first()
+
+    if not game:
+        flash("That game doesn't exit.", "info")
+        return redirect(url_for('stats', team_id=team_id))
 
     competitions = db.session.query(Competition.id, Competition.name).\
             filter_by(game_id=game_id).all()
 
     competition_ids = [ c.id for c in competitions ]
 
-    gametype_id = int(request.values.get('gametype') or 0)
-    map_id = int(request.values.get('map') or 0)
-    competition_id = int(request.values.get('competition') or 0)
+    gametype_id = int(request.values.get('gametype', 0))
+    map_id = int(request.values.get('map', 0))
+    competition_id = int(request.values.get('competition', 0))
 
     competitions = db.session.query(Competition.id,
                                     Competition.abbr,
