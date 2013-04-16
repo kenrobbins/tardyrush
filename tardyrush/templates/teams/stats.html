@@ -108,12 +108,11 @@ $(document).ready(function(){
         </li>
     </ul>
 
-    <form method='get' class="form-inline"
-    action="{{url_for('teams.combined_stats', team_id=team.id)}}">
-    <input type="hidden" name="game" value="{{game.id}}"/>
+    <form method='get' class="form-inline" action="{{url_for('teams.combined_stats', team_id=team.id)}}">
 
     {% for field in combine_form if not field|is_hidden_field -%}
-        {{ field }}
+        {% set span = 'span3' if field.name == 'game' else 'span2' %}
+        {{ field(class=span) }}
     {% endfor -%}
 
     <button type="submit" class="btn">Go</button>

@@ -123,7 +123,7 @@ class LeaveTeamForm(Form):
     pass
 
 class PlayerStatsCombineForm(Form):
+    game = SelectField(u'Game', coerce=int)
     competition = SelectField(u'Competition', coerce=int)
     gametype = SelectField(u'Game Type', coerce=int)
     map = SelectField(u'Map', coerce=int)
-

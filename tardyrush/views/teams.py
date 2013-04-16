@@ -405,13 +405,16 @@ def stats(team_id=0):
 
     # only look at one game at a time.  but the tables only have competition
     # id, so get the competition ids from the game id.
-    game_id = request.values.get('game', 1)
+    game_id = int(request.values.get('game', 1))
 
-    game = db.session.query(Game).filter_by(id=game_id).first()
+    games = db.session.query(Game).all()
+    game = [ ga for ga in games if ga.id == game_id ]
 
     if not game:
         flash("That game doesn't exit.", "info")
         return redirect(url_for('stats', team_id=team_id))
+    else:
+        game = game[0]
 
     competitions = db.session.query(Competition.id,
                                     Competition.abbr,
@@ -428,6 +431,7 @@ def stats(team_id=0):
     competition_ids = [ c.id for c in competitions ]
 
     combine_form = PlayerStatsCombineForm()
+    combine_form.game.choices = [ (ga.id, ga.name) for ga in games ]
     combine_form.competition.choices = [ (0, "Competition"), (0, "Any") ]
     combine_form.gametype.choices = [ (0, "Game Type"), (0, "Any") ]
     combine_form.map.choices = [ (0, "Map"), (0, "Any") ]
@@ -437,6 +441,8 @@ def stats(team_id=0):
         gametypes ])
     combine_form.map.choices.extend([ (m.id, m.name) for m in\
         maps ])
+
+    combine_form.game.data = game_id
 
     grouper_id = grouper_id_to_int(request.values.get('grouper'))
 
@@ -775,13 +781,16 @@ def combined_stats(team_id=0):
     else:
         page = { 'top' : 'team', 'sub' : 'player_stats' }
 
-    game_id = request.values.get('game', 1)
+    game_id = int(request.values.get('game', 1))
 
-    game = db.session.query(Game).filter_by(id=game_id).first()
+    games = db.session.query(Game).all()
+    game = [ ga for ga in games if ga.id == game_id ]
 
     if not game:
         flash("That game doesn't exit.", "info")
         return redirect(url_for('stats', team_id=team_id))
+    else:
+        game = game[0]
 
     competitions = db.session.query(Competition.id, Competition.name).\
             filter_by(game_id=game_id).all()
@@ -806,9 +815,10 @@ def combined_stats(team_id=0):
     mapp = next((v for v in maps if v.id == map_id), None)
 
     if not gametype and not mapp and not competition:
-        return redirect(url_for('stats', team_id=team_id))
+        return redirect(url_for('stats', team_id=team_id, game=game_id))
 
     combine_form = PlayerStatsCombineForm()
+    combine_form.game.choices = [ (ga.id, ga.name) for ga in games ]
     combine_form.competition.choices = [ (0, "Competition"), (0, "Any") ]
     combine_form.gametype.choices = [ (0, "Game Type"), (0, "Any") ]
     combine_form.map.choices = [ (0, "Map"), (0, "Any") ]
@@ -819,6 +829,7 @@ def combined_stats(team_id=0):
     combine_form.map.choices.extend([ (m.id, m.name) for m in\
         maps ])
 
+    combine_form.game.data = game_id
     combine_form.competition.data = competition_id
     combine_form.gametype.data = gametype_id
     combine_form.map.data = map_id
