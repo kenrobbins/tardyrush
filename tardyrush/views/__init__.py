@@ -66,3 +66,7 @@ def contact():
     return rt("contact.html",
             page={'top':'contact', 'sub':''},
             form=form, sent=sent)
+
+@app.route('/about/')
+def about():
+    return rt("about.html", page={'top':'about', 'sub':''})

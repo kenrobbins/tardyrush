@@ -355,7 +355,7 @@ def add():
         db.session.commit()
 
         flash(u'The team was successfully created.', 'success')
-        return redirect(url_for('matches.my_matches'))
+        return redirect(url_for('my_teams'))
 
     return rt('teams/create.html',
             page={'top': 'teams', 'sub': 'add_team'},

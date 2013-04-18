@@ -29,6 +29,8 @@
                                 <a href="{{ url_for('teams.all') }}">Teams</a></li>
                             <li {% if page.top == 'contact' %}class="active"{%endif%}>
                                 <a href="{{url_for('.contact')}}">Contact</a></li>
+                            <li {% if page.top == 'about' %}class="active"{%endif%}>
+                                <a href="{{url_for('.about')}}">About</a></li>
                         </ul>
                         {% if not g.user.is_guest %}
                             <p class="navbar-text pull-right">
@@ -105,14 +107,19 @@
                                     <a href="{{ url_for('teams.stats', team_id=team.id) }}">Stats</a></li>
                                     {%- if g.user.can_edit_team(team.id) -%}
                                         <li class="nav-header">My Team Administration</li>
-                                        <li class="{% if page.sub == 'admin' %}active {%-endif%}">
-                                            <a href="{{ url_for('team_admin.index',
-                                                team_id=team.id)
-                                                }}">Administration home</a></li>
                                         <li class="{% if page.sub == 'edit' %}active {%-endif%}">
                                         <a href="{{ url_for('teams.show',
                                             team_id=team.id, action='edit')
                                             }}">Edit my team</a></li>
+                                        <li class="{% if page.sub == 'opponents' %}active {%-endif%}">
+                                            <a href="{{ url_for('team_admin.opponents', team_id=team.id)
+                                                }}">Edit opponents</a></li>
+                                        <li class="{% if page.sub == 'servers' %}active {%-endif%}">
+                                            <a href="{{ url_for('team_admin.servers', team_id=team.id)
+                                                }}">Edit servers</a></li>
+                                        <li class="{% if page.sub == 'forum_bots' %}active {%-endif%}">
+                                            <a href="{{ url_for('team_admin.forum_bots', team_id=team.id)
+                                                }}">Edit forum helpers</a></li>
                                     {%- endif -%}
                                 {%- endif -%}
                             </ul>

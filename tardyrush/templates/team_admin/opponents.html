@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block title %}
+{{team.name}} - Team Administration - Opponents
+{% endblock %}
+{% block body %}
+<div class="page-header">
+    <h1>{{team.name}} <small>Opponents</small></h1>
+</div>
+
+    <div class="span5 flush-left">
+
+    <table class="table table-condensed">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Tag</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%- for o in opponents %}
+                <tr>
+                    <td><a href="{{
+                    url_for('opponent',team_id=team.id,opponent_id=o.id,action='edit') }}">{{ o.name }}</a></td>
+                    <td>{{ o.tag }}</td>
+                </tr>
+            {%- endfor %}
+        </tbody>
+    </table>
+    </div>
+    <div class="clearfix"></div>
+    <div>
+        <a class="btn" href="{{url_for('add_opponent', team_id=team.id)}}">Add Opponent</a>
+    </div>
+
+
+{% endblock %}

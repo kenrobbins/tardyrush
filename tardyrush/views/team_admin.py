@@ -45,12 +45,12 @@ def add_server(team_id=0):
             return redirect(url_for('matches.show', action='edit',
                 match_id=int(form.f.data), new_server_id=server.id))
 
-        return redirect(url_for('index',team_id=team_id))
+        return redirect(url_for('servers',team_id=team_id))
 
     form.f.data = request.values.get('f') or ''
 
     return rt('team_admin/server_form.html',
-            page={'top':'my_teams', 'sub':'admin'},
+            page={'top':'my_teams', 'sub':'servers'},
             team={'id':team_id,'name':g.user.teams[team_id].name},
             adding=True, form=form)
 
@@ -84,7 +84,7 @@ def server(team_id, server_id, action):
         else:
             return rt('team_admin/server_form.html',
                     team={'id':team_id, 'name':g.user.teams[team_id].name},
-                    page={'top':'my_teams', 'sub':'admin'},
+                    page={'top':'my_teams', 'sub':'servers'},
                     server_id=server_id,
                     adding=False, form=form)
     elif action == 'delete':
@@ -93,7 +93,7 @@ def server(team_id, server_id, action):
             db.session.commit()
             flash(u'The server was successfully deleted.', 'success')
 
-    return redirect(url_for('index',team_id=team_id))
+    return redirect(url_for('servers',team_id=team_id))
 
 
 @team_admin.route('/team/<int:team_id>/opponent/add/', methods=('GET','POST'))
@@ -131,13 +131,13 @@ def add_opponent(team_id=0):
             return redirect(url_for('matches.show', action='edit',
                 match_id=int(form.f.data), new_opponent_id=opponent.id))
 
-        return redirect(url_for('index',team_id=team_id))
+        return redirect(url_for('opponents',team_id=team_id))
 
     form.f.data = request.values.get('f') or ''
 
     return rt('team_admin/opponent_form.html',
             team={'id' : team_id, 'name':g.user.teams[team_id].name},
-            page={'top':'my_teams', 'sub':'admin'},
+            page={'top':'my_teams', 'sub':'opponents'},
             adding=True, form=form)
 
 
@@ -171,7 +171,7 @@ def opponent(team_id, opponent_id, action):
             flash(u'The opponent was successfully updated.', 'success')
         else:
             return rt('team_admin/opponent_form.html',
-                    page={'top':'my_teams', 'sub':'admin'},
+                    page={'top':'my_teams', 'sub':'opponents'},
                     team={'id' : team_id, 'name':g.user.teams[team_id].name},
                     opponent_id=opponent_id,
                     adding=False, form=form)
@@ -181,11 +181,11 @@ def opponent(team_id, opponent_id, action):
             db.session.commit()
             flash(u'The opponent was successfully deleted.', 'success')
 
-    return redirect(url_for('index',team_id=team_id))
+    return redirect(url_for('opponents', team_id=team_id))
 
 
-@team_admin.route('/team/<int:team_id>/admin/')
-def index(team_id=0):
+@team_admin.route('/team/<int:team_id>/opponent/')
+def opponents(team_id):
     if not team_id or not g.user.is_team_leader(team_id):
         flash(u'You must be a team leader to administrate the team.', 'error')
         return redirect(url_for('teams.my_teams'))
@@ -195,21 +195,41 @@ def index(team_id=0):
             order_by(Opponent.name.asc()).\
             all()
 
+    return rt('team_admin/opponents.html',
+            page={'top':'my_teams','sub':'opponents'},
+            team={'id' : team_id, 'name':g.user.teams[team_id].name},
+            opponents=opponents)
+
+@team_admin.route('/team/<int:team_id>/server/')
+def servers(team_id):
+    if not team_id or not g.user.is_team_leader(team_id):
+        flash(u'You must be a team leader to administrate the team.', 'error')
+        return redirect(url_for('teams.my_teams'))
+
     servers = Server.query.\
             filter_by(team_id=team_id).\
             order_by(Server.name.asc()).\
             all()
+
+    return rt('team_admin/servers.html',
+            page={'top':'my_teams','sub':'servers'},
+            team={'id' : team_id, 'name':g.user.teams[team_id].name},
+            servers=servers)
+
+@team_admin.route('/team/<int:team_id>/forum_helper/')
+def forum_bots(team_id=0):
+    if not team_id or not g.user.is_team_leader(team_id):
+        flash(u'You must be a team leader to administrate the team.', 'error')
+        return redirect(url_for('teams.my_teams'))
 
     forum_bots = ForumBot.query.\
             filter_by(team_id=team_id).\
             order_by(ForumBot.id.desc()).\
             all()
 
-    return rt('team_admin/index.html',
-            page={'top':'my_teams','sub':'admin'},
+    return rt('team_admin/forum_bots.html',
+            page={'top':'my_teams','sub':'forum_bots'},
             team={'id' : team_id, 'name':g.user.teams[team_id].name},
-            opponents=opponents,
-            servers=servers,
             forum_bots=forum_bots)
 
 @team_admin.route('/team/<int:team_id>/forum_bots/add/', methods=('GET','POST'))
@@ -239,11 +259,11 @@ def add_forum_bot(team_id=0):
         db.session.add(forum_bot)
         db.session.commit()
         flash(u'The forum helper was successfully added.', 'success')
-        return redirect(url_for('index',team_id=team_id))
+        return redirect(url_for('forum_bots',team_id=team_id))
 
     return rt('team_admin/forum_bot_form.html',
             team={'id' : team_id, 'name':g.user.teams[team_id].name},
-            page={'top':'my_teams', 'sub':'admin'},
+            page={'top':'my_teams', 'sub':'forum_bots'},
             adding=True, form=form)
 
 
@@ -276,7 +296,7 @@ def forum_bot(team_id,forum_bot_id, action):
             flash(u'The forum helper was successfully updated.', 'success')
         else:
             return rt('team_admin/forum_bot_form.html',
-                    page={'top':'my_teams', 'sub':'admin'},
+                    page={'top':'my_teams', 'sub':'forum_bots'},
                     team={'id' : team_id, 'name':g.user.teams[team_id].name},
                     forum_bot_id=forum_bot_id,
                     adding=False, form=form)
@@ -286,5 +306,4 @@ def forum_bot(team_id,forum_bot_id, action):
             db.session.commit()
             flash(u'The forum helper was successfully deleted.', 'success')
 
-    return redirect(url_for('index', team_id=team_id))
-
+    return redirect(url_for('forum_bots', team_id=team_id))

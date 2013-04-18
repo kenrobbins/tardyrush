@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block title %}
+{{team.name}} - Team Administration - Servers
+{% endblock %}
+{% block body %}
+<div class="page-header">
+    <h1>{{team.name}} <small>Servers</small></h1>
+</div>
+
+    <div class="span5 flush-left">
+    <h2>Servers</h2>
+    <table class="table table-condensed">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+        </tr>
+        </thead>
+        <tbody>
+        {%- for s in servers %}
+            <tr>
+                <td><a
+                href="{{url_for('server',team_id=team.id,server_id=s.id,action='edit')}}">{{ s.name }}</a></td>
+                <td>{{ s.address }}</td>
+            </tr>
+        {%- endfor %}
+        </tbody>
+    </table>
+    </div>
+    <div class="clearfix"></div>
+    <div>
+    <a class="btn" href="{{url_for('add_server', team_id=team.id)}}">Add Server</a>
+    </div>
+
+{% endblock %}

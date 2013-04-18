@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block title %}
+{{team.name}} - Forum Helpers
+{% endblock %}
+{% block body %}
+<div class="page-header">
+    <h1>{{team.name}} <small>Forum Helpers</small></h1>
+</div>
+
+    <div>
+    <table class="table table-condensed">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Type</th>
+            <th>URL</th>
+            <th>Forum <br/>ID</th>
+            <th>User Name</th>
+            <th>Password</th>
+            <th>Post when a match<br />from this game is added</th>
+        </tr>
+        </thead>
+        <tbody>
+        {%- for s in forum_bots %}
+            <tr>
+                <td><a
+                href="{{url_for('forum_bot',team_id=team.id,forum_bot_id=s.id,action='edit')}}">{{
+                s.id }}</a></td>
+                <td>{{ s.pretty_type }}</td>
+                <td>{{ s.url }}</td>
+                <td>{{ s.forum_id }}</td>
+                <td>{{ s.user_name }}</td>
+                <td>{{ s.password }}</td>
+                {%- if s.game -%}
+                    <td>{{ s.game.name }}</td>
+                {%- else -%}
+                    <td>Any Game</td>
+                {%- endif -%}
+            </tr>
+        {%- endfor %}
+        </tbody>
+    </table>
+    </div>
+    <div class="clearfix"></div>
+    <div>
+    <a class="btn" href="{{url_for('add_forum_bot', team_id=team.id)}}">Add Forum Helper</a>
+    </div>
+
+{% endblock %}
